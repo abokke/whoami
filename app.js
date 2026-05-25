@@ -28,6 +28,10 @@ const i18n = {
     submitButton: "See Results",
     resetButton: "Reset",
     retryButton: "Try Again",
+    helpStep1: "① Enter personal info about the person",
+    helpStep2: "② Click \"Make Prompt\"",
+    helpStep3: "③ Paste prompt into ChatGPT / Claude → copy the JSON output",
+    helpStep4: "④ Paste JSON here → \"Import\" → Share!",
     resultMessages: {
       perfect: { title: "Perfect!", message: "Are you a stalker?!" },
       great:   { title: "You really know them", message: "You're practically their shadow." },
@@ -56,6 +60,10 @@ const i18n = {
     submitButton: "結果を見る",
     resetButton: "リセット",
     retryButton: "もう一度",
+    helpStep1: "① 本人の情報を入力する",
+    helpStep2: "② 「プロンプト作成」をクリック",
+    helpStep3: "③ ChatGPT / Claude にプロンプトを貼る → JSON出力をコピー",
+    helpStep4: "④ JSONをここに貼る → 「読み込む」 → シェア！",
     resultMessages: {
       perfect: { title: "完璧！あなたはストーカーですか？", message: "全問正解です。本人の口ぐせや行動パターンまでかなり把握しています。" },
       great:   { title: "かなり分かってる", message: "近い距離で見ている人の正解率です。あと少しで本人公認レベル。" },
@@ -261,6 +269,10 @@ function loadFromHash() {
     saveQuiz(quiz);
     renderQuiz(quiz);
     setTab("quiz");
+    const builderTab = document.querySelector('[data-tab="builder"]');
+    builderTab.hidden = true;
+    document.querySelector(".tablist").classList.add("single-tab");
+    document.querySelector("#helpBanner").hidden = true;
     return true;
   } catch {
     return false;
@@ -402,6 +414,15 @@ function renderQuiz(quiz) {
     card.append(kicker, question, choices);
     questionStack.append(card);
   });
+
+  questionStack.addEventListener("change", () => {
+    const answered = quizForm.querySelectorAll("input[type='radio']:checked").length;
+    const total = currentQuiz.questions.length;
+    scoreMeterFill.style.width = `${Math.round((answered / total) * 100)}%`;
+    quizMeta.textContent = currentLang === "en"
+      ? `${answered}/${total} answered`
+      : `${answered}/${total}問回答済み`;
+  }, { once: false });
 }
 
 // ---- Result ----
@@ -507,8 +528,16 @@ document.querySelector("#copyPromptButton").addEventListener("click", async () =
     setStatus("コピーするプロンプトがありません。", true);
     return;
   }
+  const btn = document.querySelector("#copyPromptButton");
+  const icon = btn.querySelector("span");
   try {
     await navigator.clipboard.writeText(promptOutput.value);
+    icon.textContent = "✓";
+    btn.classList.add("is-copied");
+    setTimeout(() => {
+      icon.textContent = "⧉";
+      btn.classList.remove("is-copied");
+    }, 1500);
     setStatus("プロンプトをコピーしました。");
   } catch {
     promptOutput.select();

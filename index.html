@@ -24,6 +24,14 @@
       </header>
 
       <section class="view is-active" id="builderView" aria-labelledby="builderTitle">
+        <div class="help-banner" id="helpBanner">
+          <ol class="help-steps">
+            <li class="help-step"><span data-i18n="helpStep1">Enter personal info about the person</span></li>
+            <li class="help-step"><span data-i18n="helpStep2">Click "Make Prompt"</span></li>
+            <li class="help-step"><span data-i18n="helpStep3">Paste prompt into ChatGPT / Claude → copy the JSON output</span></li>
+            <li class="help-step"><span data-i18n="helpStep4">Paste JSON here → "Import" → Share!</span></li>
+          </ol>
+        </div>
         <div class="builder-grid">
           <section class="panel profile-panel">
             <div class="panel-heading">
@@ -54,7 +62,7 @@
             <div class="panel-heading">
               <h2 data-i18n="jsonHeading">Quiz JSON</h2>
               <button class="icon-button" type="button" id="clearQuizButton" aria-label="Clear quiz" title="Clear quiz">
-                <span aria-hidden="true">⌫</span>
+                <span aria-hidden="true">×</span>
               </button>
             </div>
             <textarea id="jsonInput" spellcheck="false" placeholder='{"title":{"en":"...","ja":"..."},"questions":[...]}'></textarea>

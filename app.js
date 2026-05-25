@@ -562,9 +562,13 @@ document.querySelector("#clearProfileButton").addEventListener("click", () => {
   setStatus("");
 });
 
+function stripCodeFences(text) {
+  return text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
+}
+
 document.querySelector("#importQuizButton").addEventListener("click", () => {
   try {
-    const quiz = normalizeQuiz(JSON.parse(jsonInput.value));
+    const quiz = normalizeQuiz(JSON.parse(stripCodeFences(jsonInput.value)));
     saveQuiz(quiz);
     renderQuiz(quiz);
     setStatus(`${quiz.questions.length}問のクイズを読み込みました。`);

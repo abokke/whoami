@@ -32,6 +32,9 @@ const i18n = {
     helpStep2: "② Click \"Make Prompt\"",
     helpStep3: "③ Paste prompt into ChatGPT / Claude → copy the JSON output",
     helpStep4: "④ Paste JSON here → \"Import\" → Share!",
+    qrButton: "QR",
+    qrHeading: "Scan to play",
+    qrHint: "Point your phone camera at this code",
     resultMessages: {
       perfect: { title: "Perfect!", message: "Are you a stalker?!" },
       great:   { title: "You really know them", message: "You're practically their shadow." },
@@ -64,6 +67,9 @@ const i18n = {
     helpStep2: "② 「プロンプト作成」をクリック",
     helpStep3: "③ ChatGPT / Claude にプロンプトを貼る → JSON出力をコピー",
     helpStep4: "④ JSONをここに貼る → 「読み込む」 → シェア！",
+    qrButton: "QR",
+    qrHeading: "スキャンして遊ぶ",
+    qrHint: "スマホのカメラをかざしてください",
     resultMessages: {
       perfect: { title: "完璧！あなたはストーカーですか？", message: "全問正解です。本人の口ぐせや行動パターンまでかなり把握しています。" },
       great:   { title: "かなり分かってる", message: "近い距離で見ている人の正解率です。あと少しで本人公認レベル。" },
@@ -156,6 +162,7 @@ const jsonInput = document.querySelector("#jsonInput");
 const builderStatus = document.querySelector("#builderStatus");
 const langToggle = document.querySelector("#langToggle");
 const shareButton = document.querySelector("#shareButton");
+const qrButton = document.querySelector("#qrButton");
 const quizTitle = document.querySelector("#quizTitle");
 const quizMeta = document.querySelector("#quizMeta");
 const scoreMeterFill = document.querySelector("#scoreMeterFill");
@@ -257,18 +264,53 @@ ${profile.trim()}`;
 
 // ---- URL share ----
 
-function buildShareUrl(quiz) {
+async function compress(str) {
+  const bytes = new TextEncoder().encode(str);
+  const cs = new CompressionStream("deflate-raw");
+  const writer = cs.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  const buf = await new Response(cs.readable).arrayBuffer();
+  let binary = "";
+  new Uint8Array(buf).forEach((b) => (binary += String.fromCharCode(b)));
+  return btoa(binary);
+}
+
+async function decompress(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const ds = new DecompressionStream("deflate-raw");
+  const writer = ds.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  return new Response(ds.readable).text();
+}
+
+async function buildShareUrl(quiz) {
   const json = JSON.stringify(quiz);
-  const b64 = btoa(unescape(encodeURIComponent(json)));
   const base = location.href.split("#")[0];
+  if (window.CompressionStream) {
+    try {
+      const b64 = await compress(json);
+      return `${base}#q2=${b64}`;
+    } catch { /* fall through */ }
+  }
+  const b64 = btoa(unescape(encodeURIComponent(json)));
   return `${base}#q=${b64}`;
 }
 
-function loadFromHash() {
+async function loadFromHash() {
   const hash = location.hash;
-  if (!hash.startsWith("#q=")) return false;
   try {
-    const json = decodeURIComponent(escape(atob(hash.slice(3))));
+    let json;
+    if (hash.startsWith("#q2=")) {
+      json = await decompress(hash.slice(4));
+    } else if (hash.startsWith("#q=")) {
+      json = decodeURIComponent(escape(atob(hash.slice(3))));
+    } else {
+      return false;
+    }
     const quiz = normalizeQuiz(JSON.parse(json));
     saveQuiz(quiz);
     renderQuiz(quiz);
@@ -376,12 +418,14 @@ function renderQuiz(quiz) {
     emptyState.hidden = false;
     quizForm.hidden = true;
     shareButton.disabled = true;
+    qrButton.disabled = true;
     return;
   }
 
   emptyState.hidden = true;
   quizForm.hidden = false;
   shareButton.disabled = false;
+  qrButton.disabled = false;
 
   quiz.questions.forEach((item, questionIndex) => {
     const card = document.createElement("section");
@@ -596,13 +640,29 @@ document.querySelector("#downloadQuizButton").addEventListener("click", () => {
 
 shareButton.addEventListener("click", async () => {
   if (!currentQuiz) return;
-  const url = buildShareUrl(currentQuiz);
+  const url = await buildShareUrl(currentQuiz);
   try {
     await navigator.clipboard.writeText(url);
     setStatus("共有リンクをコピーしました。Discordに貼ってね！");
   } catch {
     prompt("共有リンクをコピーしてください:", url);
   }
+});
+
+document.querySelector("#qrButton").addEventListener("click", async () => {
+  if (!currentQuiz) return;
+  const url = await buildShareUrl(currentQuiz);
+  const canvas = document.querySelector("#qrCanvas");
+  await QRCode.toCanvas(canvas, url, { width: 260, margin: 2 });
+  document.querySelector("#qrOverlay").hidden = false;
+});
+
+document.querySelector("#qrClose").addEventListener("click", () => {
+  document.querySelector("#qrOverlay").hidden = true;
+});
+
+document.querySelector("#qrOverlay").addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.hidden = true;
 });
 
 document.querySelector("#clearQuizButton").addEventListener("click", () => {
@@ -639,6 +699,8 @@ quizForm.addEventListener("submit", showResult);
 
 applyLang();
 
-if (!loadFromHash()) {
-  renderQuiz(loadStoredQuiz());
-}
+(async () => {
+  if (!await loadFromHash()) {
+    renderQuiz(loadStoredQuiz());
+  }
+})();

@@ -496,6 +496,53 @@ button:disabled {
   border-left-color: var(--coral);
 }
 
+.qr-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.qr-modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 32px 24px;
+  background: var(--panel);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.qr-modal h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.qr-modal canvas {
+  border-radius: 8px;
+  display: block;
+}
+
+.qr-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.qr-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
 @media (max-width: 860px) {
   .help-steps {
     flex-direction: column;

@@ -76,71 +76,71 @@ const i18n = {
 
 // ---- Sample data ----
 
-const sampleProfile = `名前: ユウスケ
-好きなこと: 新しいWebサービスのプロトタイプ作成、寿司、散歩
-性格: 合理的だが、友人の相談には長く付き合う
-口ぐせ: 「まず最小で試そう」
-苦手: 長すぎる会議、曖昧な依頼
-友人が知っている話: 旅行先で毎朝同じ喫茶店に通った
-最近の関心: AIを使った自己紹介や友人向けクイズ`;
+const sampleProfile = `名前: サンプル太郎
+好きなこと: カレーライス、読書、週末のサイクリング
+性格: マイペースだが、頼まれると断れない
+口ぐせ: 「とりあえずやってみよう」
+苦手: 早起き、電話での長話
+友人が知っている話: 迷子になるたびに隠れた名店を発見する
+最近の関心: 自炊のレパートリーを増やすこと`;
 
 const sampleQuiz = {
-  title: { en: "Do You Know Yusuke?", ja: "ユウスケ理解度チェック" },
+  title: { en: "Do You Know Sample Taro?", ja: "サンプル太郎理解度チェック" },
   questions: [
     {
-      question: { en: "What phrase does Yusuke say most often?", ja: "ユウスケがよく言いそうな一言は？" },
+      question: { en: "What phrase does Sample Taro say most often?", ja: "サンプル太郎がよく言いそうな一言は？" },
       choices: [
-        { en: "Let's try the smallest version first", ja: "まず最小で試そう" },
-        { en: "Let's do it all with guts",            ja: "気合いで全部やろう" },
-        { en: "Think about it tomorrow",               ja: "明日考えよう" },
-        { en: "Let's add more meetings",               ja: "会議を増やそう" }
+        { en: "Let's just give it a try",  ja: "とりあえずやってみよう" },
+        { en: "Let's think it over first", ja: "まず考えてからにしよう" },
+        { en: "Leave it to someone else",  ja: "誰かに任せよう" },
+        { en: "Let's add more steps",      ja: "もっと手順を増やそう" }
       ],
       answerIndex: 0,
-      explanation: { en: "He prefers prototyping from the smallest possible unit.", ja: "最小実装から検証するのが好きです。" }
+      explanation: { en: "His go-to phrase is 'Let's just give it a try' — action before overthinking.", ja: "口ぐせは「とりあえずやってみよう」。考えすぎる前に動くタイプです。" }
     },
     {
-      question: { en: "What is Yusuke most likely to dislike?", ja: "ユウスケが最も苦手なものは？" },
+      question: { en: "What is Sample Taro most likely to struggle with?", ja: "サンプル太郎が最も苦手なことは？" },
       choices: [
-        { en: "Quick memos",  ja: "短いメモ" },
-        { en: "Walking",      ja: "散歩" },
-        { en: "Long meetings",ja: "長すぎる会議" },
-        { en: "Sushi",        ja: "寿司" }
+        { en: "Cooking",          ja: "料理" },
+        { en: "Cycling",          ja: "サイクリング" },
+        { en: "Waking up early",  ja: "早起き" },
+        { en: "Reading books",    ja: "読書" }
       ],
       answerIndex: 2,
-      explanation: { en: "Long meetings and vague requests are his kryptonite.", ja: "長すぎる会議と曖昧な依頼が苦手です。" }
+      explanation: { en: "Early mornings are his weakness — and long phone calls too.", ja: "早起きと電話での長話が苦手です。" }
     },
     {
-      question: { en: "What does Yusuke tend to do on trips?", ja: "旅行先でユウスケがやりがちなことは？" },
+      question: { en: "What tends to happen when Sample Taro gets lost?", ja: "サンプル太郎が迷子になったとき、よくあることは？" },
       choices: [
-        { en: "Change plans every minute",          ja: "予定を毎分変える" },
-        { en: "Visit the same café every morning",  ja: "毎朝同じ喫茶店に通う" },
-        { en: "Stay in the hotel all day",           ja: "一日中ホテルにいる" },
-        { en: "Skip meals",                          ja: "食事を抜く" }
+        { en: "He panics and calls for help",       ja: "パニックになって助けを呼ぶ" },
+        { en: "He discovers a hidden gem restaurant", ja: "隠れた名店を発見する" },
+        { en: "He retraces his steps perfectly",    ja: "完璧に来た道を戻る" },
+        { en: "He stays put and waits",             ja: "その場で動かず待つ" }
       ],
       answerIndex: 1,
-      explanation: { en: "Once he finds a place he likes, he keeps going back.", ja: "気に入った場所を繰り返し楽しむタイプです。" }
+      explanation: { en: "Getting lost is practically his superpower for finding great spots.", ja: "迷子になるたびに名店を見つけるのが特技みたいになっています。" }
     },
     {
-      question: { en: "What best describes Yusuke's current interest?", ja: "ユウスケの最近の関心に最も近いのは？" },
+      question: { en: "What is Sample Taro's recent hobby focus?", ja: "サンプル太郎の最近の関心は？" },
       choices: [
-        { en: "AI tools for self-intros and friend quizzes", ja: "AIを使った自己紹介や友人向けクイズ" },
-        { en: "Pottery only",                                ja: "陶芸だけ" },
-        { en: "Fishing tournaments",                         ja: "釣り大会" },
-        { en: "Memorizing ancient scripts",                  ja: "古代文字の暗記" }
+        { en: "Expanding his home cooking repertoire", ja: "自炊のレパートリーを増やすこと" },
+        { en: "Learning a new language",               ja: "新しい言語の習得" },
+        { en: "Training for a marathon",               ja: "マラソンのトレーニング" },
+        { en: "Starting a podcast",                    ja: "ポッドキャストを始めること" }
       ],
       answerIndex: 0,
-      explanation: { en: "He's been into AI tools for connecting with people.", ja: "AIを使った友人向けサービスに関心があります。" }
+      explanation: { en: "He's been focused on home cooking lately — curry being a staple.", ja: "最近は自炊に力を入れています。カレーが得意料理です。" }
     },
     {
-      question: { en: "How would Yusuke respond to a vague request?", ja: "曖昧な依頼を受けたとき、ユウスケが取りそうな行動は？" },
+      question: { en: "How does Sample Taro react when someone asks him a favor?", ja: "頼まれごとをされたとき、サンプル太郎はどうする？" },
       choices: [
-        { en: "Start immediately without asking",         ja: "確認せずすぐ動く" },
-        { en: "Clarify the goal and scope first",         ja: "目的とスコープを先に確認する" },
-        { en: "Delegate it to someone else",              ja: "誰かに任せる" },
-        { en: "Ignore it and wait",                       ja: "無視して待つ" }
+        { en: "Says no right away",              ja: "すぐに断る" },
+        { en: "Agrees even when busy",           ja: "忙しくても引き受けてしまう" },
+        { en: "Negotiates the deadline first",   ja: "まず締め切りを交渉する" },
+        { en: "Pretends not to have heard",      ja: "聞こえなかったふりをする" }
       ],
       answerIndex: 1,
-      explanation: { en: "Vague requests are one of his biggest dislikes — clarity first.", ja: "曖昧な依頼が苦手なので、まず明確化を求めます。" }
+      explanation: { en: "He can't say no — being asked is enough for him to say yes.", ja: "断れない性格なので、頼まれるとついOKしてしまいます。" }
     }
   ]
 };
@@ -218,18 +218,18 @@ function setTab(tabName) {
 
 function makePrompt(profile) {
   return `You are an editor of a personality quiz for friends.
-Read the person memo below and create a 4-choice quiz with exactly 5 questions that captures who this person really is.
+Read the person memo below and output a quiz JSON — nothing else.
 
-Rules:
-- Make it fun and accessible for friends
-- Include not just facts but also values, catchphrases, and behavior patterns
-- 4 choices per question
-- EVERY text field (question, each choice, explanation) must be bilingual: {"en": "...", "ja": "..."}
-- title must also be bilingual: {"en": "...", "ja": "..."}
-- answerIndex is 0-based integer
-- Output JSON only — no markdown, no explanation outside the JSON
+STRICT REQUIREMENTS (violating any of these will break the app):
+- EXACTLY 5 questions — not 3, not 4, not 6. Count before you respond.
+- EXACTLY 4 choices per question — not 3, not 5. Count each question.
+- EVERY string field must be bilingual: { "en": "...", "ja": "..." }
+- title must also be bilingual: { "en": "...", "ja": "..." }
+- answerIndex is a 0-based integer (0, 1, 2, or 3)
+- Output RAW JSON only — no markdown fences (\`\`\`), no backticks, no text before or after
+- Do NOT truncate. Output all 5 questions in full.
 
-JSON schema:
+JSON schema (follow exactly):
 {
   "title": { "en": "...", "ja": "..." },
   "questions": [
@@ -243,7 +243,11 @@ JSON schema:
       ],
       "answerIndex": 0,
       "explanation": { "en": "...", "ja": "..." }
-    }
+    },
+    { "question": {...}, "choices": [{...},{...},{...},{...}], "answerIndex": 0, "explanation": {...} },
+    { "question": {...}, "choices": [{...},{...},{...},{...}], "answerIndex": 0, "explanation": {...} },
+    { "question": {...}, "choices": [{...},{...},{...},{...}], "answerIndex": 0, "explanation": {...} },
+    { "question": {...}, "choices": [{...},{...},{...},{...}], "answerIndex": 0, "explanation": {...} }
   ]
 }
 

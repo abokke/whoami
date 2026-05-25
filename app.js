@@ -226,7 +226,7 @@ STRICT REQUIREMENTS (violating any of these will break the app):
 - EVERY string field must be bilingual: { "en": "...", "ja": "..." }
 - title must also be bilingual: { "en": "...", "ja": "..." }
 - answerIndex is a 0-based integer (0, 1, 2, or 3)
-- Output RAW JSON only — no markdown fences (\`\`\`), no backticks, no text before or after
+- Wrap your output in a \`\`\`json code block so the user can copy it with one click
 - Do NOT truncate. Output all 5 questions in full.
 
 JSON schema (follow exactly):

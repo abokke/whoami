@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Whoami Quiz</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f8b8d'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-size='26' font-family='Arial' font-weight='700' fill='white'%3EW%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Whoami Quiz</p>
+          <h1>その人らしさを当てるクイズ</h1>
+        </div>
+        <div class="tablist" role="tablist" aria-label="表示切り替え">
+          <button class="tab is-active" type="button" data-tab="builder" role="tab" aria-selected="true">作問</button>
+          <button class="tab" type="button" data-tab="quiz" role="tab" aria-selected="false">回答</button>
+        </div>
+      </header>
+
+      <section class="view is-active" id="builderView" aria-labelledby="builderTitle">
+        <div class="builder-grid">
+          <section class="panel profile-panel">
+            <div class="panel-heading">
+              <h2 id="builderTitle">パーソナル</h2>
+              <button class="icon-button" type="button" id="clearProfileButton" aria-label="入力を消去" title="入力を消去">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+            <label class="field-label" for="profileInput">AIに読ませる情報</label>
+            <textarea id="profileInput" spellcheck="false" placeholder="例: 名前、好きなもの、価値観、仕事、口ぐせ、失敗談、友人しか知らない話"></textarea>
+            <div class="action-row">
+              <button class="primary-button" type="button" id="makePromptButton">プロンプト作成</button>
+              <button class="ghost-button" type="button" id="loadSampleButton">サンプル</button>
+            </div>
+          </section>
+
+          <section class="panel prompt-panel">
+            <div class="panel-heading">
+              <h2>AIプロンプト</h2>
+              <button class="icon-button" type="button" id="copyPromptButton" aria-label="コピー" title="コピー">
+                <span aria-hidden="true">⧉</span>
+              </button>
+            </div>
+            <textarea id="promptOutput" spellcheck="false" readonly placeholder="プロンプトがここに表示されます"></textarea>
+          </section>
+
+          <section class="panel json-panel">
+            <div class="panel-heading">
+              <h2>設問JSON</h2>
+              <button class="icon-button" type="button" id="clearQuizButton" aria-label="クイズを消去" title="クイズを消去">
+                <span aria-hidden="true">⌫</span>
+              </button>
+            </div>
+            <textarea id="jsonInput" spellcheck="false" placeholder='{"title":"...","questions":[...]}'></textarea>
+            <div class="action-row">
+              <button class="primary-button" type="button" id="importQuizButton">読み込む</button>
+              <button class="ghost-button" type="button" id="downloadQuizButton">書き出し</button>
+            </div>
+            <p class="status-line" id="builderStatus" role="status" aria-live="polite"></p>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="quizView" aria-labelledby="quizTitle">
+        <div class="quiz-layout">
+          <aside class="score-panel">
+            <p class="eyebrow">Challenge</p>
+            <h2 id="quizTitle">未読み込み</h2>
+            <div class="score-meter" aria-hidden="true">
+              <span id="scoreMeterFill"></span>
+            </div>
+            <p id="quizMeta">0問</p>
+          </aside>
+
+          <section class="quiz-panel" id="quizPanel">
+            <div class="empty-state" id="emptyState">
+              <h2>設問JSONを読み込んでください</h2>
+              <button class="primary-button" type="button" data-tab-jump="builder">作問へ</button>
+            </div>
+
+            <form id="quizForm" class="quiz-form" hidden>
+              <div class="question-stack" id="questionStack"></div>
+              <div class="quiz-actions">
+                <button class="ghost-button" type="button" id="resetAnswersButton">リセット</button>
+                <button class="primary-button" type="submit">結果を見る</button>
+              </div>
+            </form>
+
+            <section class="result-panel" id="resultPanel" hidden>
+              <p class="eyebrow">Result</p>
+              <h2 id="resultTitle"></h2>
+              <p id="resultMessage"></p>
+              <div class="result-detail" id="resultDetail"></div>
+              <div class="action-row">
+                <button class="primary-button" type="button" id="retryButton">もう一度</button>
+                <button class="ghost-button" type="button" data-tab-jump="builder">作問へ</button>
+              </div>
+            </section>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

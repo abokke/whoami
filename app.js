@@ -163,6 +163,8 @@ const builderStatus = document.querySelector("#builderStatus");
 const langToggle = document.querySelector("#langToggle");
 const shareButton = document.querySelector("#shareButton");
 const qrButton = document.querySelector("#qrButton");
+const qrOverlay = document.querySelector("#qrOverlay");
+const qrCanvas = document.querySelector("#qrCanvas");
 const quizTitle = document.querySelector("#quizTitle");
 const quizMeta = document.querySelector("#quizMeta");
 const scoreMeterFill = document.querySelector("#scoreMeterFill");
@@ -264,6 +266,23 @@ ${profile.trim()}`;
 
 // ---- URL share ----
 
+function bytesToBase64Url(bytes) {
+  let binary = "";
+  bytes.forEach((b) => (binary += String.fromCharCode(b)));
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function base64UrlToBytes(value) {
+  const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(value.length / 4) * 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
 async function compress(str) {
   const bytes = new TextEncoder().encode(str);
   const cs = new CompressionStream("deflate-raw");
@@ -271,15 +290,11 @@ async function compress(str) {
   writer.write(bytes);
   writer.close();
   const buf = await new Response(cs.readable).arrayBuffer();
-  let binary = "";
-  new Uint8Array(buf).forEach((b) => (binary += String.fromCharCode(b)));
-  return btoa(binary);
+  return bytesToBase64Url(new Uint8Array(buf));
 }
 
 async function decompress(b64) {
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const bytes = base64UrlToBytes(b64);
   const ds = new DecompressionStream("deflate-raw");
   const writer = ds.writable.getWriter();
   writer.write(bytes);
@@ -290,7 +305,7 @@ async function decompress(b64) {
 async function buildShareUrl(quiz) {
   const json = JSON.stringify(quiz);
   const base = location.href.split("#")[0];
-  if (window.CompressionStream) {
+  if (window.CompressionStream && window.DecompressionStream) {
     try {
       const b64 = await compress(json);
       return `${base}#q2=${b64}`;
@@ -305,6 +320,7 @@ async function loadFromHash() {
   try {
     let json;
     if (hash.startsWith("#q2=")) {
+      if (!window.DecompressionStream) return false;
       json = await decompress(hash.slice(4));
     } else if (hash.startsWith("#q=")) {
       json = decodeURIComponent(escape(atob(hash.slice(3))));
@@ -313,14 +329,17 @@ async function loadFromHash() {
     }
     const quiz = normalizeQuiz(JSON.parse(json));
     saveQuiz(quiz);
+    jsonInput.value = JSON.stringify(quiz, null, 2);
     renderQuiz(quiz);
     setTab("quiz");
     const builderTab = document.querySelector('[data-tab="builder"]');
     builderTab.hidden = true;
     document.querySelector(".tablist").classList.add("single-tab");
     document.querySelector("#helpBanner").hidden = true;
+    setStatus(currentLang === "en" ? "Shared quiz loaded." : "共有されたクイズを読み込みました。");
     return true;
   } catch {
+    setStatus(currentLang === "en" ? "Could not load the shared quiz link." : "共有リンクのクイズを読み込めませんでした。", true);
     return false;
   }
 }
@@ -652,16 +671,19 @@ shareButton.addEventListener("click", async () => {
 document.querySelector("#qrButton").addEventListener("click", async () => {
   if (!currentQuiz) return;
   const url = await buildShareUrl(currentQuiz);
-  const canvas = document.querySelector("#qrCanvas");
-  await QRCode.toCanvas(canvas, url, { width: 260, margin: 2 });
-  document.querySelector("#qrOverlay").hidden = false;
+  if (!window.QRCode) {
+    setStatus("QRコードライブラリを読み込めませんでした。共有リンクをコピーしてください。", true);
+    return;
+  }
+  await QRCode.toCanvas(qrCanvas, url, { width: 260, margin: 2 });
+  qrOverlay.hidden = false;
 });
 
 document.querySelector("#qrClose").addEventListener("click", () => {
-  document.querySelector("#qrOverlay").hidden = true;
+  qrOverlay.hidden = true;
 });
 
-document.querySelector("#qrOverlay").addEventListener("click", (e) => {
+qrOverlay.addEventListener("click", (e) => {
   if (e.target === e.currentTarget) e.currentTarget.hidden = true;
 });
 
@@ -701,6 +723,8 @@ applyLang();
 
 (async () => {
   if (!await loadFromHash()) {
-    renderQuiz(loadStoredQuiz());
+    const storedQuiz = loadStoredQuiz();
+    if (storedQuiz) jsonInput.value = JSON.stringify(storedQuiz, null, 2);
+    renderQuiz(storedQuiz);
   }
 })();

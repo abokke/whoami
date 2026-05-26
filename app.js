@@ -20,6 +20,10 @@ const i18n = {
     promptHeading: "AI Prompt",
     promptPlaceholder: "Your prompt will appear here",
     jsonHeading: "Quiz JSON",
+    quizReadyEyebrow: "Quiz setup",
+    quizReadyHeading: "Load and share your quiz",
+    quizReadyNote: "Most people only paste the AI output here once. Open the JSON editor when you need to import or tweak it.",
+    jsonSummary: "Paste or edit quiz JSON",
     importQuiz: "Import",
     download: "Export",
     share: "🔗 Copy Share Link",
@@ -35,6 +39,32 @@ const i18n = {
     qrButton: "QR",
     qrHeading: "Scan to play",
     qrHint: "Point your phone camera at this code",
+    challengeEyebrow: "Challenge",
+    resultEyebrow: "Result",
+    yourAnswer: "Your answer",
+    correctAnswer: "Correct answer",
+    explanationLabel: "Why",
+    correctLabel: "Correct",
+    copiedShare: "Share link copied.",
+    qrError: "Could not load the QR code library. Copy the share link instead.",
+    selectedAnswer: "Selected answer",
+    changeAnswer: "Change",
+    unansweredError: "Choose one answer.",
+    statusMessages: {
+      sharedLoaded: "Shared quiz loaded.",
+      sharedLoadError: "Could not load the shared quiz link.",
+      profileRequired: "Enter personal info first.",
+      promptCreated: "AI prompt created.",
+      promptMissing: "There is no prompt to copy.",
+      promptCopied: "Prompt copied.",
+      promptSelected: "Could not copy automatically, so the prompt was selected.",
+      sampleLoaded: "Sample loaded.",
+      quizImported: "{count} questions loaded.",
+      importError: "Could not load the quiz JSON.",
+      exportMissing: "There is no quiz JSON to export.",
+      exportDone: "Quiz JSON exported.",
+      quizCleared: "Quiz cleared."
+    },
     resultMessages: {
       perfect: { title: "Perfect!", message: "Are you a stalker?!" },
       great:   { title: "You really know them", message: "You're practically their shadow." },
@@ -55,6 +85,10 @@ const i18n = {
     promptHeading: "AIプロンプト",
     promptPlaceholder: "プロンプトがここに表示されます",
     jsonHeading: "設問JSON",
+    quizReadyEyebrow: "クイズ設定",
+    quizReadyHeading: "読み込みと共有",
+    quizReadyNote: "AIの出力を一度貼り付ければ十分です。必要なときだけJSONエディタを開いて編集できます。",
+    jsonSummary: "設問JSONを貼り付け/編集",
     importQuiz: "読み込む",
     download: "書き出し",
     share: "🔗 リンクをコピー",
@@ -70,6 +104,32 @@ const i18n = {
     qrButton: "QR",
     qrHeading: "スキャンして遊ぶ",
     qrHint: "スマホのカメラをかざしてください",
+    challengeEyebrow: "チャレンジ",
+    resultEyebrow: "結果",
+    yourAnswer: "あなたの回答",
+    correctAnswer: "正解",
+    explanationLabel: "解説",
+    correctLabel: "正解",
+    copiedShare: "共有リンクをコピーしました。",
+    qrError: "QRコードライブラリを読み込めませんでした。共有リンクをコピーしてください。",
+    selectedAnswer: "選択した回答",
+    changeAnswer: "変更",
+    unansweredError: "回答を1つ選んでください。",
+    statusMessages: {
+      sharedLoaded: "共有されたクイズを読み込みました。",
+      sharedLoadError: "共有リンクのクイズを読み込めませんでした。",
+      profileRequired: "パーソナルを入力してください。",
+      promptCreated: "AIプロンプトを作成しました。",
+      promptMissing: "コピーするプロンプトがありません。",
+      promptCopied: "プロンプトをコピーしました。",
+      promptSelected: "コピーできないため、プロンプトを選択しました。",
+      sampleLoaded: "サンプルを読み込みました。",
+      quizImported: "{count}問のクイズを読み込みました。",
+      importError: "設問JSONを読み込めません。",
+      exportMissing: "書き出す設問JSONがありません。",
+      exportDone: "設問JSONを書き出しました。",
+      quizCleared: "クイズを消去しました。"
+    },
     resultMessages: {
       perfect: { title: "完璧！あなたはストーカーですか？", message: "全問正解です。本人の口ぐせや行動パターンまでかなり把握しています。" },
       great:   { title: "かなり分かってる", message: "近い距離で見ている人の正解率です。あと少しで本人公認レベル。" },
@@ -158,16 +218,21 @@ const builderView = document.querySelector("#builderView");
 const quizView = document.querySelector("#quizView");
 const profileInput = document.querySelector("#profileInput");
 const promptOutput = document.querySelector("#promptOutput");
+const jsonDetails = document.querySelector("#jsonDetails");
 const jsonInput = document.querySelector("#jsonInput");
 const builderStatus = document.querySelector("#builderStatus");
 const langToggle = document.querySelector("#langToggle");
-const shareButton = document.querySelector("#shareButton");
-const qrButton = document.querySelector("#qrButton");
+const shareButtons = document.querySelectorAll("[data-share-action='copy']");
+const qrButtons = document.querySelectorAll("[data-share-action='qr']");
 const qrOverlay = document.querySelector("#qrOverlay");
 const qrCanvas = document.querySelector("#qrCanvas");
 const quizTitle = document.querySelector("#quizTitle");
 const quizMeta = document.querySelector("#quizMeta");
 const scoreMeterFill = document.querySelector("#scoreMeterFill");
+const quizProgressBar = document.querySelector("#quizProgressBar");
+const stickyQuizTitle = document.querySelector("#stickyQuizTitle");
+const stickyQuizMeta = document.querySelector("#stickyQuizMeta");
+const stickyScoreMeterFill = document.querySelector("#stickyScoreMeterFill");
 const emptyState = document.querySelector("#emptyState");
 const quizForm = document.querySelector("#quizForm");
 const questionStack = document.querySelector("#questionStack");
@@ -188,6 +253,74 @@ function t(field) {
 function setStatus(message, isError = false) {
   builderStatus.textContent = message;
   builderStatus.style.color = isError ? "#b42318" : "";
+}
+
+function statusText(key, vars = {}) {
+  const template = i18n[currentLang].statusMessages[key] ?? "";
+  return template.replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? ""));
+}
+
+function setShareControls(enabled) {
+  shareButtons.forEach((button) => {
+    button.disabled = !enabled;
+  });
+  qrButtons.forEach((button) => {
+    button.disabled = !enabled;
+  });
+}
+
+function baseQuizMeta(quiz) {
+  return quiz ? `${quiz.questions.length} ${currentLang === "en" ? "questions" : "問"}` : "";
+}
+
+function answeredQuizMeta(answered, total) {
+  return currentLang === "en"
+    ? `${answered}/${total} answered`
+    : `${answered}/${total}問回答済み`;
+}
+
+function updateProgress(meta, percent) {
+  quizMeta.textContent = meta;
+  stickyQuizMeta.textContent = meta;
+  scoreMeterFill.style.width = `${percent}%`;
+  stickyScoreMeterFill.style.width = `${percent}%`;
+}
+
+function setQuestionError(card, message = "") {
+  const error = card.querySelector(".question-error");
+  card.classList.toggle("is-missing", Boolean(message));
+  error.textContent = message;
+}
+
+function syncQuestionCards() {
+  questionStack.querySelectorAll(".question-card").forEach((card) => {
+    const checked = card.querySelector("input[type='radio']:checked");
+    const selected = card.querySelector(".selected-answer-text");
+    const changeButton = card.querySelector(".change-answer-button");
+    if (!checked) {
+      card.classList.remove("is-answered", "is-editing");
+      selected.textContent = "";
+      changeButton.hidden = true;
+      return;
+    }
+
+    selected.textContent = checked.nextElementSibling.textContent;
+    changeButton.hidden = false;
+    card.classList.add("is-answered");
+    card.classList.remove("is-editing");
+    setQuestionError(card);
+  });
+}
+
+function updateAnswerProgress() {
+  if (!currentQuiz) {
+    updateProgress("", 0);
+    return;
+  }
+  const answered = quizForm.querySelectorAll("input[type='radio']:checked").length;
+  const total = currentQuiz.questions.length;
+  const meta = answered === 0 ? baseQuizMeta(currentQuiz) : answeredQuizMeta(answered, total);
+  updateProgress(meta, Math.round((answered / total) * 100));
 }
 
 // ---- Language toggle ----
@@ -336,10 +469,10 @@ async function loadFromHash() {
     builderTab.hidden = true;
     document.querySelector(".tablist").classList.add("single-tab");
     document.querySelector("#helpBanner").hidden = true;
-    setStatus(currentLang === "en" ? "Shared quiz loaded." : "共有されたクイズを読み込みました。");
+    setStatus(statusText("sharedLoaded"));
     return true;
   } catch {
-    setStatus(currentLang === "en" ? "Could not load the shared quiz link." : "共有リンクのクイズを読み込めませんでした。", true);
+    setStatus(statusText("sharedLoadError"), true);
     return false;
   }
 }
@@ -425,10 +558,9 @@ function loadStoredQuiz() {
 function renderQuiz(quiz) {
   currentQuiz = quiz;
   quizTitle.textContent = quiz ? t(quiz.title) : "—";
-  quizMeta.textContent = quiz
-    ? `${quiz.questions.length} ${currentLang === "en" ? "questions" : "問"}`
-    : "";
-  scoreMeterFill.style.width = "0%";
+  stickyQuizTitle.textContent = quiz ? t(quiz.title) : "—";
+  quizProgressBar.hidden = !quiz;
+  updateProgress(baseQuizMeta(quiz), 0);
   questionStack.innerHTML = "";
   resultPanel.hidden = true;
   lastAnswers = null;
@@ -436,19 +568,18 @@ function renderQuiz(quiz) {
   if (!quiz) {
     emptyState.hidden = false;
     quizForm.hidden = true;
-    shareButton.disabled = true;
-    qrButton.disabled = true;
+    setShareControls(false);
     return;
   }
 
   emptyState.hidden = true;
   quizForm.hidden = false;
-  shareButton.disabled = false;
-  qrButton.disabled = false;
+  setShareControls(true);
 
   quiz.questions.forEach((item, questionIndex) => {
     const card = document.createElement("section");
     card.className = "question-card";
+    card.dataset.questionIndex = String(questionIndex);
 
     const kicker = document.createElement("div");
     kicker.className = "question-kicker";
@@ -457,6 +588,29 @@ function renderQuiz(quiz) {
     const question = document.createElement("p");
     question.className = "question-text";
     question.textContent = t(item.question);
+
+    const selectedSummary = document.createElement("div");
+    selectedSummary.className = "selected-answer";
+
+    const selectedLabel = document.createElement("span");
+    selectedLabel.className = "selected-answer-label";
+    selectedLabel.textContent = i18n[currentLang].selectedAnswer;
+
+    const selectedText = document.createElement("strong");
+    selectedText.className = "selected-answer-text";
+
+    const changeButton = document.createElement("button");
+    changeButton.className = "change-answer-button";
+    changeButton.type = "button";
+    changeButton.textContent = i18n[currentLang].changeAnswer;
+    changeButton.hidden = true;
+    changeButton.addEventListener("click", () => {
+      card.classList.add("is-editing");
+      const checked = card.querySelector("input[type='radio']:checked");
+      if (checked) checked.focus();
+    });
+
+    selectedSummary.append(selectedLabel, selectedText, changeButton);
 
     const choices = document.createElement("div");
     choices.className = "choices";
@@ -470,6 +624,7 @@ function renderQuiz(quiz) {
       input.name = `question-${questionIndex}`;
       input.value = String(choiceIndex);
       input.required = true;
+      input.setAttribute("aria-describedby", `question-error-${questionIndex}`);
 
       const text = document.createElement("span");
       text.textContent = t(choiceField);
@@ -478,18 +633,19 @@ function renderQuiz(quiz) {
       choices.append(label);
     });
 
-    card.append(kicker, question, choices);
+    const error = document.createElement("p");
+    error.className = "question-error";
+    error.id = `question-error-${questionIndex}`;
+    error.setAttribute("aria-live", "polite");
+
+    card.append(kicker, question, selectedSummary, choices, error);
     questionStack.append(card);
   });
 
-  questionStack.addEventListener("change", () => {
-    const answered = quizForm.querySelectorAll("input[type='radio']:checked").length;
-    const total = currentQuiz.questions.length;
-    scoreMeterFill.style.width = `${Math.round((answered / total) * 100)}%`;
-    quizMeta.textContent = currentLang === "en"
-      ? `${answered}/${total} answered`
-      : `${answered}/${total}問回答済み`;
-  }, { once: false });
+  questionStack.onchange = () => {
+    syncQuestionCards();
+    updateAnswerProgress();
+  };
 }
 
 // ---- Result ----
@@ -520,7 +676,7 @@ function renderResult(answers) {
   quizMeta.textContent = currentLang === "en"
     ? `${score}/${total} correct`
     : `${score}/${total}問正解`;
-  scoreMeterFill.style.width = `${Math.round((score / total) * 100)}%`;
+  updateProgress(quizMeta.textContent, Math.round((score / total) * 100));
 
   resultDetail.innerHTML = "";
   currentQuiz.questions.forEach((item, index) => {
@@ -528,16 +684,37 @@ function renderResult(answers) {
     const isCorrect = answers[index] === item.answerIndex;
     row.className = `answer-row ${isCorrect ? "is-correct" : "is-wrong"}`;
     const correctChoice = t(item.choices[item.answerIndex]);
+    const selectedChoice = t(item.choices[answers[index]]);
     const explanationText = t(item.explanation);
 
-    if (isCorrect) {
-      row.textContent = `Q${index + 1}: ✓ ${correctChoice}`;
-    } else {
-      const selectedChoice = t(item.choices[answers[index]]);
-      row.textContent = `Q${index + 1}: ${selectedChoice} → ✓ ${correctChoice}`;
+    const badge = document.createElement("span");
+    badge.className = "answer-badge";
+    badge.textContent = isCorrect ? `Q${index + 1} ${i18n[currentLang].correctLabel}` : `Q${index + 1}`;
+
+    const answerBody = document.createElement("div");
+    answerBody.className = "answer-body";
+
+    const selected = document.createElement("p");
+    selected.innerHTML = `<strong>${i18n[currentLang].yourAnswer}</strong><span></span>`;
+    selected.querySelector("span").textContent = selectedChoice;
+    answerBody.append(selected);
+
+    if (!isCorrect) {
+      const correct = document.createElement("p");
+      correct.innerHTML = `<strong>${i18n[currentLang].correctAnswer}</strong><span></span>`;
+      correct.querySelector("span").textContent = correctChoice;
+      answerBody.append(correct);
     }
 
-    if (explanationText) row.textContent += ` / ${explanationText}`;
+    if (explanationText) {
+      const explanation = document.createElement("p");
+      explanation.className = "answer-explanation";
+      explanation.innerHTML = `<strong>${i18n[currentLang].explanationLabel}</strong><span></span>`;
+      explanation.querySelector("span").textContent = explanationText;
+      answerBody.append(explanation);
+    }
+
+    row.append(badge, answerBody);
     resultDetail.append(row);
   });
 }
@@ -552,7 +729,18 @@ function showResult(event) {
   });
 
   if (answers.some((a) => a === -1)) {
-    quizForm.reportValidity();
+    let firstMissing = null;
+    answers.forEach((answer, index) => {
+      const card = questionStack.querySelector(`[data-question-index="${index}"]`);
+      if (answer === -1) {
+        setQuestionError(card, i18n[currentLang].unansweredError);
+        card.classList.add("is-editing");
+        firstMissing ??= card;
+      } else {
+        setQuestionError(card);
+      }
+    });
+    firstMissing.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
 
@@ -582,17 +770,17 @@ document.querySelectorAll("[data-tab-jump]").forEach((button) => {
 document.querySelector("#makePromptButton").addEventListener("click", () => {
   const profile = profileInput.value.trim();
   if (!profile) {
-    setStatus("パーソナルを入力してください。", true);
+    setStatus(statusText("profileRequired"), true);
     profileInput.focus();
     return;
   }
   promptOutput.value = makePrompt(profile);
-  setStatus("AIプロンプトを作成しました。");
+  setStatus(statusText("promptCreated"));
 });
 
 document.querySelector("#copyPromptButton").addEventListener("click", async () => {
   if (!promptOutput.value.trim()) {
-    setStatus("コピーするプロンプトがありません。", true);
+    setStatus(statusText("promptMissing"), true);
     return;
   }
   const btn = document.querySelector("#copyPromptButton");
@@ -605,10 +793,10 @@ document.querySelector("#copyPromptButton").addEventListener("click", async () =
       icon.textContent = "⧉";
       btn.classList.remove("is-copied");
     }, 1500);
-    setStatus("プロンプトをコピーしました。");
+    setStatus(statusText("promptCopied"));
   } catch {
     promptOutput.select();
-    setStatus("コピーできないため、プロンプトを選択しました。");
+    setStatus(statusText("promptSelected"));
   }
 });
 
@@ -616,7 +804,7 @@ document.querySelector("#loadSampleButton").addEventListener("click", () => {
   profileInput.value = sampleProfile;
   promptOutput.value = makePrompt(sampleProfile);
   jsonInput.value = JSON.stringify(sampleQuiz, null, 2);
-  setStatus("サンプルを読み込みました。");
+  setStatus(statusText("sampleLoaded"));
 });
 
 document.querySelector("#clearProfileButton").addEventListener("click", () => {
@@ -634,17 +822,19 @@ document.querySelector("#importQuizButton").addEventListener("click", () => {
     const quiz = normalizeQuiz(JSON.parse(stripCodeFences(jsonInput.value)));
     saveQuiz(quiz);
     renderQuiz(quiz);
-    setStatus(`${quiz.questions.length}問のクイズを読み込みました。`);
+    jsonDetails.open = false;
+    setStatus(statusText("quizImported", { count: quiz.questions.length }));
     setTab("quiz");
   } catch (error) {
-    setStatus(error.message || "設問JSONを読み込めません。", true);
+    jsonDetails.open = true;
+    setStatus(error.message || statusText("importError"), true);
   }
 });
 
 document.querySelector("#downloadQuizButton").addEventListener("click", () => {
   const source = jsonInput.value.trim() || (currentQuiz ? JSON.stringify(currentQuiz, null, 2) : "");
   if (!source) {
-    setStatus("書き出す設問JSONがありません。", true);
+    setStatus(statusText("exportMissing"), true);
     return;
   }
   const blob = new Blob([source], { type: "application/json" });
@@ -654,29 +844,37 @@ document.querySelector("#downloadQuizButton").addEventListener("click", () => {
   link.download = "whoami-quiz.json";
   link.click();
   URL.revokeObjectURL(url);
-  setStatus("設問JSONを書き出しました。");
+  setStatus(statusText("exportDone"));
 });
 
-shareButton.addEventListener("click", async () => {
+async function copyShareLink() {
   if (!currentQuiz) return;
   const url = await buildShareUrl(currentQuiz);
   try {
     await navigator.clipboard.writeText(url);
-    setStatus("共有リンクをコピーしました。Discordに貼ってね！");
+    setStatus(i18n[currentLang].copiedShare);
   } catch {
     prompt("共有リンクをコピーしてください:", url);
   }
-});
+}
 
-document.querySelector("#qrButton").addEventListener("click", async () => {
+async function showQrCode() {
   if (!currentQuiz) return;
   const url = await buildShareUrl(currentQuiz);
   if (!window.QRCode) {
-    setStatus("QRコードライブラリを読み込めませんでした。共有リンクをコピーしてください。", true);
+    setStatus(i18n[currentLang].qrError, true);
     return;
   }
   await QRCode.toCanvas(qrCanvas, url, { width: 260, margin: 2 });
   qrOverlay.hidden = false;
+}
+
+shareButtons.forEach((button) => {
+  button.addEventListener("click", copyShareLink);
+});
+
+qrButtons.forEach((button) => {
+  button.addEventListener("click", showQrCode);
 });
 
 document.querySelector("#qrClose").addEventListener("click", () => {
@@ -690,16 +888,20 @@ qrOverlay.addEventListener("click", (e) => {
 document.querySelector("#clearQuizButton").addEventListener("click", () => {
   localStorage.removeItem(STORAGE_KEY);
   jsonInput.value = "";
+  jsonDetails.open = true;
   renderQuiz(null);
-  setStatus("クイズを消去しました。");
+  setStatus(statusText("quizCleared"));
 });
 
 document.querySelector("#resetAnswersButton").addEventListener("click", () => {
   quizForm.reset();
-  scoreMeterFill.style.width = "0%";
-  quizMeta.textContent = currentQuiz
-    ? `${currentQuiz.questions.length} ${currentLang === "en" ? "questions" : "問"}`
-    : "";
+  questionStack.querySelectorAll(".question-card").forEach((card) => {
+    setQuestionError(card);
+    card.classList.remove("is-answered", "is-editing");
+    card.querySelector(".selected-answer-text").textContent = "";
+    card.querySelector(".change-answer-button").hidden = true;
+  });
+  updateProgress(baseQuizMeta(currentQuiz), 0);
   lastAnswers = null;
 });
 
@@ -707,10 +909,13 @@ document.querySelector("#retryButton").addEventListener("click", () => {
   quizForm.reset();
   quizForm.hidden = false;
   resultPanel.hidden = true;
-  scoreMeterFill.style.width = "0%";
-  quizMeta.textContent = currentQuiz
-    ? `${currentQuiz.questions.length} ${currentLang === "en" ? "questions" : "問"}`
-    : "";
+  questionStack.querySelectorAll(".question-card").forEach((card) => {
+    setQuestionError(card);
+    card.classList.remove("is-answered", "is-editing");
+    card.querySelector(".selected-answer-text").textContent = "";
+    card.querySelector(".change-answer-button").hidden = true;
+  });
+  updateProgress(baseQuizMeta(currentQuiz), 0);
   lastAnswers = null;
   quizForm.scrollIntoView({ behavior: "smooth", block: "start" });
 });

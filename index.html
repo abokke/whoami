@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Whoami Quiz</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f8b8d'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-size='26' font-family='Arial' font-weight='700' fill='white'%3EW%3C/text%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="styles.css?v=design-review-fixes-7" />
+    <link rel="stylesheet" href="styles.css?v=inline-quiz-editor-9" />
   </head>
   <body>
     <main class="app-shell">
@@ -24,41 +24,79 @@
       </header>
 
       <section class="view is-active" id="builderView" aria-labelledby="builderTitle">
-        <div class="help-banner" id="helpBanner">
-          <ol class="help-steps">
-            <li class="help-step"><span data-i18n="helpStep1">Enter personal info about the person</span></li>
-            <li class="help-step"><span data-i18n="helpStep2">Click "Make Prompt"</span></li>
-            <li class="help-step"><span data-i18n="helpStep3">Paste prompt into ChatGPT / Claude → copy the JSON output</span></li>
-            <li class="help-step"><span data-i18n="helpStep4">Paste JSON here → "Import" → Share!</span></li>
-          </ol>
-        </div>
-        <div class="builder-grid">
-          <section class="panel profile-panel">
-            <div class="panel-heading">
-              <h2 id="builderTitle" data-i18n="profileHeading">Personal Info</h2>
-              <button class="icon-button" type="button" id="clearProfileButton" aria-label="Clear input" title="Clear input">
-                <span aria-hidden="true">×</span>
-              </button>
-            </div>
-            <label class="field-label" for="profileInput" data-i18n="profileLabel">Info for the AI to read</label>
-            <textarea id="profileInput" spellcheck="false"></textarea>
-            <div class="action-row">
-              <button class="primary-button" type="button" id="makePromptButton" data-i18n="makePrompt">Make Prompt</button>
-              <button class="ghost-button" type="button" id="loadSampleButton" data-i18n="sample">Sample</button>
+        <nav class="builder-stepper" id="builderStepper" aria-label="Quiz creation steps">
+          <button class="step-tab is-active" type="button" data-builder-step="1">
+            <span>1</span>
+            <strong data-i18n="stepPrompt">Prompt</strong>
+          </button>
+          <button class="step-tab" type="button" data-builder-step="2">
+            <span>2</span>
+            <strong data-i18n="stepJson">JSON</strong>
+          </button>
+          <button class="step-tab" type="button" data-builder-step="3">
+            <span>3</span>
+            <strong data-i18n="stepEdit">Edit</strong>
+          </button>
+          <button class="step-tab" type="button" data-builder-step="4">
+            <span>4</span>
+            <strong data-i18n="stepShare">Share</strong>
+          </button>
+        </nav>
+        <p class="status-line" id="builderStatus" role="status" aria-live="polite"></p>
+
+        <div class="builder-flow">
+          <section class="step-panel is-active" data-step-panel="1">
+            <div class="step-grid">
+              <section class="panel profile-panel">
+                <div class="panel-heading">
+                  <h2 id="builderTitle" data-i18n="profileHeading">Personal Info</h2>
+                  <button class="icon-button" type="button" id="clearProfileButton" aria-label="Clear input" title="Clear input">
+                    <span aria-hidden="true">×</span>
+                  </button>
+                </div>
+                <label class="field-label" for="profileInput" data-i18n="profileLabel">Info for the AI to read</label>
+                <textarea id="profileInput" spellcheck="false"></textarea>
+                <div class="action-row">
+                  <button class="primary-button" type="button" id="makePromptButton" data-i18n="makePrompt">Make Prompt</button>
+                  <button class="ghost-button" type="button" id="loadSampleButton" data-i18n="sample">Sample</button>
+                </div>
+              </section>
+
+              <section class="panel prompt-panel">
+                <div class="panel-heading">
+                  <h2 data-i18n="promptHeading">AI Prompt</h2>
+                  <button class="icon-button" type="button" id="copyPromptButton" aria-label="Copy" title="Copy">
+                    <span aria-hidden="true">⧉</span>
+                  </button>
+                </div>
+                <p class="panel-note" data-i18n="promptStepNote">Copy this prompt to an external AI, then bring the JSON result back here.</p>
+                <textarea id="promptOutput" spellcheck="false" readonly></textarea>
+                <div class="action-row">
+                  <button class="ghost-button" type="button" id="goJsonButton" data-i18n="goJsonStep">Paste generated JSON</button>
+                </div>
+              </section>
             </div>
           </section>
 
-          <section class="panel prompt-panel">
-            <div class="panel-heading">
-              <h2 data-i18n="promptHeading">AI Prompt</h2>
-              <button class="icon-button" type="button" id="copyPromptButton" aria-label="Copy" title="Copy">
-                <span aria-hidden="true">⧉</span>
-              </button>
-            </div>
-            <textarea id="promptOutput" spellcheck="false" readonly></textarea>
+          <section class="step-panel" data-step-panel="2">
+            <section class="panel json-panel" id="jsonDetails">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow" data-i18n="jsonEyebrow">AI output</p>
+                  <h2 data-i18n="jsonSummary">Paste or edit quiz JSON</h2>
+                </div>
+              </div>
+              <p class="json-note" data-i18n="quizReadyNote">Paste the AI output here, then import it to review and edit the generated quiz.</p>
+              <textarea id="jsonInput" spellcheck="false" placeholder='{"title":{"en":"...","ja":"..."},"questions":[...]}'></textarea>
+              <div class="action-row">
+                <button class="primary-button" type="button" id="importQuizButton" data-i18n="importQuiz">Import</button>
+                <button class="ghost-button" type="button" id="downloadQuizButton" data-i18n="download">Export</button>
+              </div>
+            </section>
           </section>
 
-          <section class="panel import-panel">
+          <section class="step-panel" data-step-panel="3">
+            <section class="panel import-panel">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow" data-i18n="quizReadyEyebrow">Quiz setup</p>
@@ -68,18 +106,50 @@
                 <span aria-hidden="true">×</span>
               </button>
             </div>
-            <p class="panel-note" data-i18n="quizReadyNote">Most people only paste the AI output here once. Open the JSON editor when you need to import or tweak it.</p>
-            <details class="json-details" id="jsonDetails">
-              <summary data-i18n="jsonSummary">Paste or edit quiz JSON</summary>
-              <textarea id="jsonInput" spellcheck="false" placeholder='{"title":{"en":"...","ja":"..."},"questions":[...]}'></textarea>
+            <section class="quiz-reveal" id="quizReveal" hidden>
+              <p class="eyebrow" data-i18n="generatedEyebrow">Generated quiz</p>
+              <h3 id="generatedQuizTitle">—</h3>
+              <p id="generatedQuizMeta"></p>
+            </section>
+            <details class="quiz-editor-details" id="quizEditorDetails" hidden>
+              <summary data-i18n="openEditor">Edit questions</summary>
+              <section class="quiz-editor" id="quizEditor">
+                <div class="editor-heading">
+                  <h3 data-i18n="editorHeading">Review and customize</h3>
+                  <p data-i18n="editorNote">Edit weak questions, choices, correct answers, or explanations before sharing.</p>
+                </div>
+                <label class="editor-field">
+                  <span data-i18n="editorTitleLabel">Quiz title</span>
+                  <input id="quizTitleEditor" type="text" />
+                </label>
+                <div class="editor-question-stack" id="questionEditorStack"></div>
+              </section>
             </details>
             <div class="action-row">
-              <button class="primary-button" type="button" id="importQuizButton" data-i18n="importQuiz">Import</button>
-              <button class="ghost-button" type="button" id="downloadQuizButton" data-i18n="download">Export</button>
-              <button class="ghost-button" type="button" id="shareButton" data-share-action="copy" disabled data-i18n="share">🔗 Copy Share Link</button>
-              <button class="ghost-button" type="button" id="qrButton" data-share-action="qr" disabled data-i18n="qrButton">QR</button>
+              <button class="primary-button" type="button" id="goShareButton" data-i18n="goShareStep">Go to share</button>
             </div>
-            <p class="status-line" id="builderStatus" role="status" aria-live="polite"></p>
+          </section>
+          </section>
+
+          <section class="step-panel" data-step-panel="4">
+            <section class="panel share-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow" data-i18n="shareEyebrow">Publish</p>
+                  <h2 data-i18n="shareHeading">Quiz URL</h2>
+                </div>
+              </div>
+              <p class="panel-note" data-i18n="shareNote">Share this URL after you finish editing the questions.</p>
+              <label class="field-label" for="shareUrlInput" data-i18n="shareUrlLabel">Quiz URL</label>
+              <div class="share-url-row">
+                <input id="shareUrlInput" type="text" readonly />
+                <button class="primary-button" type="button" id="shareButton" data-share-action="copy" disabled data-i18n="copyUrl">Copy URL</button>
+              </div>
+              <div class="action-row">
+                <button class="ghost-button" type="button" id="qrButton" data-share-action="qr" disabled data-i18n="qrButton">QR</button>
+                <button class="ghost-button" type="button" id="openQuizButton" disabled data-i18n="openQuiz">Open play screen</button>
+              </div>
+            </section>
           </section>
         </div>
       </section>
@@ -119,6 +189,14 @@
             </form>
 
             <section class="result-panel" id="resultPanel" hidden>
+              <div class="result-effect" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
               <p class="eyebrow" data-i18n="resultEyebrow">Result</p>
               <h2 id="resultTitle"></h2>
               <p id="resultMessage"></p>
@@ -146,6 +224,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-    <script src="app.js?v=design-review-fixes-7"></script>
+    <script src="app.js?v=inline-quiz-editor-9"></script>
   </body>
 </html>

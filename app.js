@@ -12,20 +12,45 @@ const i18n = {
     appSubtitle: "A quiz about the real you",
     tabBuilder: "Create",
     tabQuiz: "Play",
+    stepPrompt: "Prompt",
+    stepJson: "JSON",
+    stepEdit: "Edit",
+    stepShare: "Share",
     profileHeading: "Personal Info",
     profileLabel: "Info for the AI to read",
     profilePlaceholder: "e.g. name, hobbies, values, catchphrases, stories only friends know",
     makePrompt: "Make Prompt",
     sample: "Sample",
     promptHeading: "AI Prompt",
+    promptStepNote: "Copy this prompt to an external AI, then bring the JSON result back here.",
+    goJsonStep: "Paste generated JSON",
     promptPlaceholder: "Your prompt will appear here",
     jsonHeading: "Quiz JSON",
-    quizReadyEyebrow: "Quiz setup",
-    quizReadyHeading: "Load and share your quiz",
-    quizReadyNote: "Most people only paste the AI output here once. Open the JSON editor when you need to import or tweak it.",
+    jsonEyebrow: "AI output",
+    quizReadyEyebrow: "Generated flow",
+    quizReadyHeading: "Generate, review, then edit",
+    quizReadyNote: "Paste the AI output here, then import it to review and edit the generated quiz.",
     jsonSummary: "Paste or edit quiz JSON",
+    generatedEyebrow: "Generated quiz",
+    openEditor: "Edit questions",
+    editorHeading: "Review and customize",
+    editorNote: "Edit weak questions, choices, correct answers, or explanations before sharing.",
+    editorTitleLabel: "Quiz title",
+    editorQuestionLabel: "Question",
+    editorChoicesLabel: "Choices",
+    editorCorrectLabel: "Correct",
+    editorExplanationLabel: "Explanation",
+    editorSaved: "Quiz edits saved.",
+    confirmPublishMessage: "Did you check the questions, correct answers, and explanations?",
     importQuiz: "Import",
     download: "Export",
+    goShareStep: "Go to share",
+    shareEyebrow: "Publish",
+    shareHeading: "Quiz URL",
+    shareNote: "Share this URL after you finish editing the questions.",
+    shareUrlLabel: "Quiz URL",
+    copyUrl: "Copy URL",
+    openQuiz: "Open play screen",
     share: "🔗 Copy Share Link",
     emptyHeading: "Import a Quiz JSON first",
     goCreate: "Create a quiz",
@@ -77,20 +102,45 @@ const i18n = {
     appSubtitle: "その人らしさを当てるクイズ",
     tabBuilder: "作問",
     tabQuiz: "回答",
+    stepPrompt: "プロンプト",
+    stepJson: "JSON貼付",
+    stepEdit: "編集",
+    stepShare: "共有",
     profileHeading: "パーソナル",
     profileLabel: "AIに読ませる情報",
     profilePlaceholder: "例: 名前、好きなもの、価値観、口ぐせ、友人しか知らない話",
     makePrompt: "プロンプト作成",
     sample: "サンプル",
     promptHeading: "AIプロンプト",
+    promptStepNote: "このプロンプトを外部AIに貼り付け、生成されたJSONを次のステップに戻します。",
+    goJsonStep: "生成JSONを貼り付ける",
     promptPlaceholder: "プロンプトがここに表示されます",
     jsonHeading: "設問JSON",
-    quizReadyEyebrow: "クイズ設定",
-    quizReadyHeading: "読み込みと共有",
-    quizReadyNote: "AIの出力を一度貼り付ければ十分です。必要なときだけJSONエディタを開いて編集できます。",
+    jsonEyebrow: "AIの出力",
+    quizReadyEyebrow: "生成フロー",
+    quizReadyHeading: "生成して、確認して、編集",
+    quizReadyNote: "AIの出力をここに貼り付けて読み込むと、生成結果の確認と編集に進めます。",
     jsonSummary: "設問JSONを貼り付け/編集",
+    generatedEyebrow: "生成されたクイズ",
+    openEditor: "設問を編集",
+    editorHeading: "設問を確認・編集",
+    editorNote: "いまいちな質問、選択肢、正解、解説を共有前に調整できます。",
+    editorTitleLabel: "クイズタイトル",
+    editorQuestionLabel: "質問",
+    editorChoicesLabel: "選択肢",
+    editorCorrectLabel: "正解",
+    editorExplanationLabel: "解説",
+    editorSaved: "設問の編集を保存しました。",
+    confirmPublishMessage: "質問・正解・解説の内容を確認しましたか？",
     importQuiz: "読み込む",
     download: "書き出し",
+    goShareStep: "共有へ進む",
+    shareEyebrow: "公開",
+    shareHeading: "出題URL",
+    shareNote: "設問の編集が終わったら、このURLを回答者に共有します。",
+    shareUrlLabel: "出題URL",
+    copyUrl: "URLをコピー",
+    openQuiz: "回答画面を開く",
     share: "🔗 リンクをコピー",
     emptyHeading: "設問JSONを読み込んでください",
     goCreate: "作問へ",
@@ -214,12 +264,23 @@ const sampleQuiz = {
 // ---- DOM refs ----
 
 const tabs = document.querySelectorAll("[data-tab]");
+const builderStepTabs = document.querySelectorAll("[data-builder-step]");
+const builderStepPanels = document.querySelectorAll("[data-step-panel]");
 const builderView = document.querySelector("#builderView");
 const quizView = document.querySelector("#quizView");
 const profileInput = document.querySelector("#profileInput");
 const promptOutput = document.querySelector("#promptOutput");
-const jsonDetails = document.querySelector("#jsonDetails");
 const jsonInput = document.querySelector("#jsonInput");
+const quizEditorDetails = document.querySelector("#quizEditorDetails");
+const quizEditor = document.querySelector("#quizEditor");
+const quizTitleEditor = document.querySelector("#quizTitleEditor");
+const questionEditorStack = document.querySelector("#questionEditorStack");
+const quizReveal = document.querySelector("#quizReveal");
+const generatedQuizTitle = document.querySelector("#generatedQuizTitle");
+const generatedQuizMeta = document.querySelector("#generatedQuizMeta");
+const shareUrlInput = document.querySelector("#shareUrlInput");
+const openQuizButton = document.querySelector("#openQuizButton");
+const goShareButton = document.querySelector("#goShareButton");
 const builderStatus = document.querySelector("#builderStatus");
 const langToggle = document.querySelector("#langToggle");
 const shareButtons = document.querySelectorAll("[data-share-action='copy']");
@@ -240,6 +301,7 @@ const resultPanel = document.querySelector("#resultPanel");
 const resultTitle = document.querySelector("#resultTitle");
 const resultMessage = document.querySelector("#resultMessage");
 const resultDetail = document.querySelector("#resultDetail");
+let shareUrlVersion = 0;
 
 // ---- Helpers ----
 
@@ -267,6 +329,48 @@ function setShareControls(enabled) {
   qrButtons.forEach((button) => {
     button.disabled = !enabled;
   });
+  if (openQuizButton) openQuizButton.disabled = !enabled;
+  if (!enabled && shareUrlInput) shareUrlInput.value = "";
+}
+
+function setBuilderStep(step) {
+  const nextStep = String(step);
+  builderStepTabs.forEach((button) => {
+    const isActive = button.dataset.builderStep === nextStep;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-current", isActive ? "step" : "false");
+  });
+  builderStepPanels.forEach((panel) => {
+    panel.classList.toggle("is-active", panel.dataset.stepPanel === nextStep);
+  });
+}
+
+function updateBuilderStepAvailability(hasQuiz) {
+  const hasJsonInput = Boolean(jsonInput.value.trim());
+  builderStepTabs.forEach((button) => {
+    const step = Number(button.dataset.builderStep);
+    button.disabled = step > 2 && !hasQuiz && !hasJsonInput;
+  });
+}
+
+function confirmBeforeShare() {
+  return window.confirm(i18n[currentLang].confirmPublishMessage);
+}
+
+async function updateShareUrlField() {
+  if (!shareUrlInput) return;
+  if (!currentQuiz) {
+    shareUrlVersion += 1;
+    shareUrlInput.value = "";
+    if (openQuizButton) openQuizButton.disabled = true;
+    return;
+  }
+
+  const version = ++shareUrlVersion;
+  const url = await buildShareUrl(currentQuiz);
+  if (version !== shareUrlVersion) return;
+  shareUrlInput.value = url;
+  if (openQuizButton) openQuizButton.disabled = false;
 }
 
 function baseQuizMeta(quiz) {
@@ -312,6 +416,25 @@ function syncQuestionCards() {
   });
 }
 
+function setLocalizedValue(field, value) {
+  if (!field || typeof field !== "object" || Array.isArray(field)) return;
+  field[currentLang] = value;
+}
+
+quizTitleEditor.addEventListener("input", () => {
+  if (!currentQuiz) return;
+  setLocalizedValue(currentQuiz.title, quizTitleEditor.value);
+  syncEditedQuiz();
+});
+
+function syncEditedQuiz() {
+  if (!currentQuiz) return;
+  jsonInput.value = JSON.stringify(currentQuiz, null, 2);
+  saveQuiz(currentQuiz);
+  setShareControls(true);
+  updateShareUrlField();
+}
+
 function updateAnswerProgress() {
   if (!currentQuiz) {
     updateProgress("", 0);
@@ -347,6 +470,7 @@ function applyLang() {
 // ---- Tab management ----
 
 function setTab(tabName) {
+  if (tabName === "quiz" && currentQuiz) renderQuiz(currentQuiz);
   tabs.forEach((tab) => {
     const isActive = tab.dataset.tab === tabName;
     tab.classList.toggle("is-active", isActive);
@@ -468,7 +592,8 @@ async function loadFromHash() {
     const builderTab = document.querySelector('[data-tab="builder"]');
     builderTab.hidden = true;
     document.querySelector(".tablist").classList.add("single-tab");
-    document.querySelector("#helpBanner").hidden = true;
+    const helpBanner = document.querySelector("#helpBanner");
+    if (helpBanner) helpBanner.hidden = true;
     setStatus(statusText("sharedLoaded"));
     return true;
   } catch {
@@ -553,10 +678,123 @@ function loadStoredQuiz() {
   }
 }
 
+// ---- Render quiz editor ----
+
+function renderQuizReveal(quiz) {
+  quizReveal.hidden = !quiz;
+  if (!quiz) {
+    generatedQuizTitle.textContent = "—";
+    generatedQuizMeta.textContent = "";
+    return;
+  }
+
+  generatedQuizTitle.textContent = t(quiz.title);
+  generatedQuizMeta.textContent = baseQuizMeta(quiz);
+}
+
+function renderQuizEditor(quiz) {
+  quizEditorDetails.hidden = !quiz;
+  quizEditorDetails.open = Boolean(quiz);
+  questionEditorStack.innerHTML = "";
+
+  if (!quiz) {
+    quizTitleEditor.value = "";
+    return;
+  }
+
+  const L = i18n[currentLang];
+  quizTitleEditor.value = t(quiz.title);
+
+  quiz.questions.forEach((item, questionIndex) => {
+    const card = document.createElement("section");
+    card.className = "editor-question-card";
+
+    const header = document.createElement("div");
+    header.className = "editor-question-header";
+
+    const kicker = document.createElement("span");
+    kicker.className = "question-kicker";
+    kicker.textContent = `Q${questionIndex + 1}`;
+
+    const correctLabel = document.createElement("span");
+    correctLabel.className = "editor-correct-summary";
+    correctLabel.textContent = `${L.editorCorrectLabel}: ${item.answerIndex + 1}`;
+
+    header.append(kicker, correctLabel);
+
+    const questionLabel = document.createElement("label");
+    questionLabel.className = "editor-field";
+    const questionCaption = document.createElement("span");
+    questionCaption.textContent = L.editorQuestionLabel;
+    const questionInput = document.createElement("textarea");
+    questionInput.rows = 2;
+    questionInput.value = t(item.question);
+    questionInput.addEventListener("input", () => {
+      setLocalizedValue(item.question, questionInput.value);
+      syncEditedQuiz();
+    });
+    questionLabel.append(questionCaption, questionInput);
+
+    const choicesGroup = document.createElement("fieldset");
+    choicesGroup.className = "editor-choices";
+
+    const choicesLegend = document.createElement("legend");
+    choicesLegend.textContent = L.editorChoicesLabel;
+    choicesGroup.append(choicesLegend);
+
+    item.choices.forEach((choice, choiceIndex) => {
+      const row = document.createElement("label");
+      row.className = "editor-choice";
+
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = `editor-answer-${questionIndex}`;
+      radio.value = String(choiceIndex);
+      radio.checked = item.answerIndex === choiceIndex;
+      radio.setAttribute("aria-label", `${L.editorCorrectLabel} ${choiceIndex + 1}`);
+      radio.addEventListener("change", () => {
+        item.answerIndex = choiceIndex;
+        correctLabel.textContent = `${L.editorCorrectLabel}: ${choiceIndex + 1}`;
+        syncEditedQuiz();
+      });
+
+      const choiceInput = document.createElement("input");
+      choiceInput.type = "text";
+      choiceInput.value = t(choice);
+      choiceInput.addEventListener("input", () => {
+        setLocalizedValue(choice, choiceInput.value);
+        syncEditedQuiz();
+      });
+
+      row.append(radio, choiceInput);
+      choicesGroup.append(row);
+    });
+
+    const explanationLabel = document.createElement("label");
+    explanationLabel.className = "editor-field";
+    const explanationCaption = document.createElement("span");
+    explanationCaption.textContent = L.editorExplanationLabel;
+    const explanationInput = document.createElement("textarea");
+    explanationInput.rows = 2;
+    explanationInput.value = t(item.explanation);
+    explanationInput.addEventListener("input", () => {
+      setLocalizedValue(item.explanation, explanationInput.value);
+      syncEditedQuiz();
+    });
+    explanationLabel.append(explanationCaption, explanationInput);
+
+    card.append(header, questionLabel, choicesGroup, explanationLabel);
+    questionEditorStack.append(card);
+  });
+}
+
 // ---- Render quiz ----
 
 function renderQuiz(quiz) {
   currentQuiz = quiz;
+  updateBuilderStepAvailability(Boolean(quiz));
+  renderQuizReveal(quiz);
+  renderQuizEditor(quiz);
   quizTitle.textContent = quiz ? t(quiz.title) : "—";
   stickyQuizTitle.textContent = quiz ? t(quiz.title) : "—";
   quizProgressBar.hidden = !quiz;
@@ -569,12 +807,14 @@ function renderQuiz(quiz) {
     emptyState.hidden = false;
     quizForm.hidden = true;
     setShareControls(false);
+    updateShareUrlField();
     return;
   }
 
   emptyState.hidden = true;
   quizForm.hidden = false;
   setShareControls(true);
+  updateShareUrlField();
 
   quiz.questions.forEach((item, questionIndex) => {
     const card = document.createElement("section");
@@ -660,6 +900,13 @@ function getResultMessage(score, total) {
   return msgs.stranger;
 }
 
+function getResultTone(score, total) {
+  const ratio = total === 0 ? 0 : score / total;
+  if (ratio >= 0.75) return "positive";
+  if (ratio >= 0.45) return "neutral";
+  return "negative";
+}
+
 function renderResult(answers) {
   if (!currentQuiz) return;
   const total = currentQuiz.questions.length;
@@ -668,6 +915,11 @@ function renderResult(answers) {
   }, 0);
 
   const result = getResultMessage(score, total);
+  const tone = getResultTone(score, total);
+  resultPanel.classList.remove("is-positive", "is-neutral", "is-negative", "is-perfect");
+  resultPanel.classList.add(`is-${tone}`);
+  if (score === total) resultPanel.classList.add("is-perfect");
+
   resultTitle.textContent = result.title;
   const scoreLabel = currentLang === "en"
     ? `${score}/${total} correct.`
@@ -763,6 +1015,10 @@ tabs.forEach((tab) => {
   tab.addEventListener("click", () => setTab(tab.dataset.tab));
 });
 
+builderStepTabs.forEach((button) => {
+  button.addEventListener("click", () => goBuilderStep(button.dataset.builderStep));
+});
+
 document.querySelectorAll("[data-tab-jump]").forEach((button) => {
   button.addEventListener("click", () => setTab(button.dataset.tabJump));
 });
@@ -776,6 +1032,11 @@ document.querySelector("#makePromptButton").addEventListener("click", () => {
   }
   promptOutput.value = makePrompt(profile);
   setStatus(statusText("promptCreated"));
+});
+
+document.querySelector("#goJsonButton").addEventListener("click", () => {
+  setBuilderStep(2);
+  jsonInput.focus();
 });
 
 document.querySelector("#copyPromptButton").addEventListener("click", async () => {
@@ -794,6 +1055,7 @@ document.querySelector("#copyPromptButton").addEventListener("click", async () =
       btn.classList.remove("is-copied");
     }, 1500);
     setStatus(statusText("promptCopied"));
+    setBuilderStep(2);
   } catch {
     promptOutput.select();
     setStatus(statusText("promptSelected"));
@@ -804,6 +1066,7 @@ document.querySelector("#loadSampleButton").addEventListener("click", () => {
   profileInput.value = sampleProfile;
   promptOutput.value = makePrompt(sampleProfile);
   jsonInput.value = JSON.stringify(sampleQuiz, null, 2);
+  setBuilderStep(2);
   setStatus(statusText("sampleLoaded"));
 });
 
@@ -817,18 +1080,59 @@ function stripCodeFences(text) {
   return text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
 }
 
-document.querySelector("#importQuizButton").addEventListener("click", () => {
+function importQuizFromInput(targetStep = 3) {
   try {
     const quiz = normalizeQuiz(JSON.parse(stripCodeFences(jsonInput.value)));
     saveQuiz(quiz);
+    quizEditorDetails.open = false;
     renderQuiz(quiz);
-    jsonDetails.open = false;
     setStatus(statusText("quizImported", { count: quiz.questions.length }));
-    setTab("quiz");
+    if (targetStep === 4) {
+      setBuilderStep(3);
+      if (confirmBeforeShare()) {
+        setBuilderStep(4);
+        updateShareUrlField();
+      }
+    } else {
+      setBuilderStep(targetStep);
+    }
+    return true;
   } catch (error) {
-    jsonDetails.open = true;
+    setBuilderStep(2);
     setStatus(error.message || statusText("importError"), true);
+    return false;
   }
+}
+
+function goBuilderStep(step) {
+  const targetStep = Number(step);
+  if (targetStep > 2) {
+    const activeStep = document.querySelector(".step-panel.is-active")?.dataset.stepPanel;
+    if (activeStep === "2" || !currentQuiz) {
+      if (!jsonInput.value.trim()) {
+        setBuilderStep(2);
+        setStatus(statusText("importError"), true);
+        return;
+      }
+      importQuizFromInput(targetStep);
+      return;
+    }
+  }
+  if (targetStep === 4 && !confirmBeforeShare()) {
+    setBuilderStep(3);
+    return;
+  }
+
+  setBuilderStep(targetStep);
+  if (targetStep === 4) updateShareUrlField();
+}
+
+jsonInput.addEventListener("input", () => {
+  updateBuilderStepAvailability(Boolean(currentQuiz));
+});
+
+document.querySelector("#importQuizButton").addEventListener("click", () => {
+  importQuizFromInput(3);
 });
 
 document.querySelector("#downloadQuizButton").addEventListener("click", () => {
@@ -877,6 +1181,20 @@ qrButtons.forEach((button) => {
   button.addEventListener("click", showQrCode);
 });
 
+goShareButton.addEventListener("click", () => {
+  if (!currentQuiz) {
+    goBuilderStep(2);
+    return;
+  }
+  goBuilderStep(4);
+});
+
+openQuizButton.addEventListener("click", () => {
+  if (!currentQuiz) return;
+  setTab("quiz");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
 document.querySelector("#qrClose").addEventListener("click", () => {
   qrOverlay.hidden = true;
 });
@@ -888,8 +1206,8 @@ qrOverlay.addEventListener("click", (e) => {
 document.querySelector("#clearQuizButton").addEventListener("click", () => {
   localStorage.removeItem(STORAGE_KEY);
   jsonInput.value = "";
-  jsonDetails.open = true;
   renderQuiz(null);
+  setBuilderStep(2);
   setStatus(statusText("quizCleared"));
 });
 
@@ -931,5 +1249,6 @@ applyLang();
     const storedQuiz = loadStoredQuiz();
     if (storedQuiz) jsonInput.value = JSON.stringify(storedQuiz, null, 2);
     renderQuiz(storedQuiz);
+    setBuilderStep(storedQuiz ? 3 : 1);
   }
 })();

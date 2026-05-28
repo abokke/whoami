@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Whoami Quiz — あなたのことを、どれだけ知ってる？</title>
+  <meta name="description" content="自分のことをAIに読ませて、5問クイズを作ろう。友人に共有して、本当に分かってくれてる人を見つけよう。" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Instrument+Serif:ital@0;1&family=Noto+Sans+JP:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:       #07070f;
+      --bg2:      #0f0f1c;
+      --bg3:      #181828;
+      --fg:       #ededf8;
+      --fg-muted: #7878a0;
+      --teal:     #00d4b8;
+      --teal-dim: rgba(0, 212, 184, 0.12);
+      --gold:     #f5c518;
+      --gold-dim: rgba(245, 197, 24, 0.12);
+      --pink:     #ff3d7f;
+      --pink-dim: rgba(255, 61, 127, 0.1);
+      --border:   rgba(255, 255, 255, 0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Noto Sans JP", sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── NAV ─── */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      background: rgba(7, 7, 15, 0.72);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: "Unbounded", sans-serif;
+      font-weight: 900;
+      font-size: 0.9rem;
+      color: var(--teal);
+      letter-spacing: 0.04em;
+      text-decoration: none;
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border: 1px solid var(--teal);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--teal);
+      font-family: "Unbounded", sans-serif;
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .nav-cta:hover {
+      background: var(--teal);
+      color: var(--bg);
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 120px 40px 80px;
+      overflow: hidden;
+    }
+
+    .hero-bg-glow {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .hero-bg-glow::before {
+      content: "";
+      position: absolute;
+      top: -200px;
+      left: -200px;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(0, 212, 184, 0.18) 0%, transparent 65%);
+      animation: drift-a 14s ease-in-out infinite alternate;
+    }
+
+    .hero-bg-glow::after {
+      content: "";
+      position: absolute;
+      bottom: -100px;
+      right: -100px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255, 61, 127, 0.12) 0%, transparent 65%);
+      animation: drift-b 18s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift-a {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(80px, 60px) scale(1.15); }
+    }
+
+    @keyframes drift-b {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(-60px, -40px) scale(1.2); }
+    }
+
+    /* floating question marks */
+    .qmarks {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .qmarks span {
+      position: absolute;
+      font-family: "Unbounded", sans-serif;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.03);
+      animation: qfloat linear infinite;
+      user-select: none;
+    }
+
+    .qmarks span:nth-child(1)  { font-size: 160px; top: 8%;  left: 72%; animation-duration: 22s; animation-delay: 0s; }
+    .qmarks span:nth-child(2)  { font-size: 80px;  top: 55%; left: 88%; animation-duration: 28s; animation-delay: -6s; }
+    .qmarks span:nth-child(3)  { font-size: 220px; top: 20%; left: -2%; animation-duration: 32s; animation-delay: -12s; }
+    .qmarks span:nth-child(4)  { font-size: 60px;  top: 80%; left: 40%; animation-duration: 19s; animation-delay: -4s; }
+    .qmarks span:nth-child(5)  { font-size: 120px; top: 70%; left: 5%;  animation-duration: 25s; animation-delay: -9s; }
+
+    @keyframes qfloat {
+      0%   { transform: translateY(0px) rotate(0deg); opacity: 0.03; }
+      50%  { opacity: 0.07; }
+      100% { transform: translateY(-40px) rotate(8deg); opacity: 0.03; }
+    }
+
+    .hero-inner {
+      position: relative;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+      font-family: "Space Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--teal);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fade-up 0.7s ease forwards 0.2s;
+    }
+
+    .hero-eyebrow::before {
+      content: "";
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: var(--teal);
+    }
+
+    .hero-headline {
+      font-family: "Unbounded", "Noto Sans JP", sans-serif;
+      font-weight: 900;
+      font-size: clamp(2.6rem, 7vw, 6.4rem);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fade-up 0.8s ease forwards 0.4s;
+    }
+
+    .hero-headline em {
+      font-style: normal;
+      color: var(--teal);
+      position: relative;
+    }
+
+    .hero-headline .line-gold {
+      color: var(--gold);
+    }
+
+    .hero-sub {
+      font-family: "Instrument Serif", "Noto Sans JP", serif;
+      font-size: clamp(1.1rem, 2.2vw, 1.55rem);
+      font-style: italic;
+      color: var(--fg-muted);
+      line-height: 1.65;
+      max-width: 560px;
+      margin-bottom: 48px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fade-up 0.8s ease forwards 0.6s;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fade-up 0.8s ease forwards 0.8s;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 36px;
+      background: var(--teal);
+      color: var(--bg);
+      border: none;
+      border-radius: 4px;
+      font-family: "Unbounded", sans-serif;
+      font-weight: 900;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: 0 0 40px rgba(0, 212, 184, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 60px rgba(0, 212, 184, 0.5);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 18px 32px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--fg-muted);
+      font-family: "Unbounded", sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--fg-muted);
+      color: var(--fg);
+    }
+
+    /* hero number accent */
+    .hero-stat-row {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      margin-top: 64px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      opacity: 0;
+      animation: fade-up 0.8s ease forwards 1s;
+    }
+
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hero-stat-num {
+      font-family: "Unbounded", sans-serif;
+      font-weight: 900;
+      font-size: 2.2rem;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .hero-stat-label {
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .hero-stat-divider {
+      width: 1px;
+      height: 40px;
+      background: var(--border);
+    }
+
+    @keyframes fade-up {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── SECTION COMMON ─── */
+    .section {
+      padding: 100px 40px;
+      position: relative;
+    }
+
+    .section-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      font-family: "Space Mono", monospace;
+      font-size: 0.72rem;
+      color: var(--teal);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .section-label::before {
+      content: "";
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .section-title {
+      font-family: "Unbounded", "Noto Sans JP", sans-serif;
+      font-weight: 900;
+      font-size: clamp(1.8rem, 4vw, 3.2rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-family: "Instrument Serif", "Noto Sans JP", serif;
+      font-size: clamp(1rem, 1.8vw, 1.25rem);
+      font-style: italic;
+      color: var(--fg-muted);
+      line-height: 1.7;
+      max-width: 560px;
+    }
+
+    /* reveal animations */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── CONCEPT STRIP ─── */
+    .concept-strip {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
+      overflow: hidden;
+    }
+
+    .concept-track {
+      display: flex;
+      gap: 0;
+      animation: marquee 28s linear infinite;
+      width: max-content;
+    }
+
+    .concept-strip:hover .concept-track {
+      animation-play-state: paused;
+    }
+
+    .concept-item {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 22px 40px 22px 0;
+      font-family: "Unbounded", sans-serif;
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+      white-space: nowrap;
+    }
+
+    .concept-item .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--teal);
+      flex-shrink: 0;
+    }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ─── HOW IT WORKS ─── */
+    .steps-section {
+      background: var(--bg);
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-top: 64px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .step-card {
+      position: relative;
+      padding: 40px 32px;
+      background: var(--bg2);
+      transition: background 0.25s ease;
+    }
+
+    .step-card:hover {
+      background: var(--bg3);
+    }
+
+    .step-card + .step-card {
+      border-left: 1px solid var(--border);
+    }
+
+    .step-num {
+      font-family: "Unbounded", sans-serif;
+      font-weight: 900;
+      font-size: 4rem;
+      line-height: 1;
+      color: rgba(255, 255, 255, 0.06);
+      margin-bottom: 20px;
+      user-select: none;
+    }
+
+    .step-icon {
+      position: absolute;
+      top: 36px;
+      right: 32px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .step-icon-1 { background: var(--teal-dim); }
+    .step-icon-2 { background: var(--gold-dim); }
+    .step-icon-3 { background: var(--pink-dim); }
+
+    .step-tag {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 4px 10px;
+      border-radius: 2px;
+      font-family: "Space Mono", monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .step-tag-1 { background: var(--teal-dim); color: var(--teal); }
+    .step-tag-2 { background: var(--gold-dim); color: var(--gold); }
+    .step-tag-3 { background: var(--pink-dim); color: var(--pink); }
+
+    .step-title {
+      font-family: "Unbounded", sans-serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+
+    .step-desc {
+      font-size: 0.9rem;
+      color: var(--fg-muted);
+      line-height: 1.7;
+    }
+
+    .step-detail {
+      margin-top: 20px;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 4px;
+      border-left: 2px solid;
+    }
+
+    .step-card:nth-child(1) .step-detail { border-color: var(--teal); }
+    .step-card:nth-child(2) .step-detail { border-color: var(--gold); }
+    .step-card:nth-child(3) .step-detail { border-color: var(--pink); }
+
+    .step-detail p {
+      font-family: "Space Mono", monospace;
+      font-size: 0.72rem;
+      color: var(--fg-muted);
+      line-height: 1.6;
+    }
+
+    /* ─── FEATURES ─── */
+    .features-section {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+    }
+
+    .features-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+      margin-top: 64px;
+    }
+
+    .features-lead {
+      position: sticky;
+      top: 100px;
+    }
+
+    .features-list {
+      display: grid;
+      gap: 2px;
+    }
+
+    .feature-item {
+      padding: 28px 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .feature-item:first-child {
+      border-top: 1px solid var(--border);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      background: var(--bg3);
+      flex-shrink: 0;
+    }
+
+    .feature-content {}
+
+    .feature-title {
+      font-family: "Unbounded", sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      line-height: 1.35;
+    }
+
+    .feature-desc {
+      font-size: 0.88rem;
+      color: var(--fg-muted);
+      line-height: 1.7;
+    }
+
+    /* ─── SCORE SHOWCASE ─── */
+    .scores-section {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .scores-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 2px;
+      margin-top: 64px;
+    }
+
+    .score-card {
+      padding: 28px 20px;
+      background: var(--bg2);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.22s ease;
+      cursor: default;
+    }
+
+    .score-card:hover {
+      transform: translateY(-4px);
+      z-index: 1;
+    }
+
+    .score-card::before {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .score-card:nth-child(1)::before { background: #b42318; }
+    .score-card:nth-child(2)::before { background: var(--gold); }
+    .score-card:nth-child(3)::before { background: var(--teal); }
+    .score-card:nth-child(4)::before { background: #22c55e; }
+    .score-card:nth-child(5)::before { background: var(--pink); }
+
+    .score-num {
+      font-family: "Unbounded", sans-serif;
+      font-weight: 900;
+      font-size: 3rem;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .score-card:nth-child(1) .score-num { color: #b42318; }
+    .score-card:nth-child(2) .score-num { color: var(--gold); }
+    .score-card:nth-child(3) .score-num { color: var(--teal); }
+    .score-card:nth-child(4) .score-num { color: #22c55e; }
+    .score-card:nth-child(5) .score-num { color: var(--pink); }
+
+    .score-label {
+      font-family: "Space Mono", monospace;
+      font-size: 0.62rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .score-msg {
+      font-size: 0.82rem;
+      color: var(--fg);
+      line-height: 1.5;
+      font-weight: 700;
+    }
+
+    /* ─── CTA ─── */
+    .cta-section {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+
+    .cta-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 100px 40px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 60px;
+    }
+
+    .cta-title {
+      font-family: "Unbounded", "Noto Sans JP", sans-serif;
+      font-weight: 900;
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .cta-title em {
+      font-style: normal;
+      color: var(--teal);
+    }
+
+    .cta-sub {
+      margin-top: 16px;
+      font-size: 0.92rem;
+      color: var(--fg-muted);
+      line-height: 1.7;
+    }
+
+    .cta-action {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .cta-note {
+      font-family: "Space Mono", monospace;
+      font-size: 0.65rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 40px;
+    }
+
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .footer-logo {
+      font-family: "Unbounded", sans-serif;
+      font-weight: 900;
+      font-size: 0.8rem;
+      color: var(--teal);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+    }
+
+    .footer-copy {
+      font-family: "Space Mono", monospace;
+      font-size: 0.68rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── MOBILE ─── */
+    @media (max-width: 900px) {
+      .nav { padding: 16px 20px; }
+      .hero { padding: 100px 20px 60px; }
+      .section { padding: 70px 20px; }
+
+      .steps-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+      .step-card + .step-card {
+        border-left: none;
+        border-top: 1px solid var(--border);
+      }
+
+      .features-layout {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      .features-lead { position: static; }
+
+      .scores-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .score-card:nth-child(4),
+      .score-card:nth-child(5) {
+        grid-column: span 1;
+      }
+
+      .cta-inner {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding: 70px 20px;
+        text-align: center;
+      }
+      .cta-action { align-items: center; }
+
+      .footer-inner { flex-direction: column; gap: 10px; text-align: center; }
+    }
+
+    @media (max-width: 560px) {
+      .hero-stat-row { gap: 24px; }
+      .hero-stat-num { font-size: 1.6rem; }
+      .scores-grid { grid-template-columns: 1fr 1fr; }
+      .score-card:nth-child(5) { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav-logo">WHOAMI</a>
+    <a href="index.html" class="nav-cta">クイズを作る →</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg-glow"></div>
+    <div class="qmarks" aria-hidden="true">
+      <span>?</span><span>?</span><span>?</span><span>?</span><span>?</span>
+    </div>
+    <div class="hero-inner">
+      <div class="hero-eyebrow">AI-Powered Personal Quiz</div>
+      <h1 class="hero-headline">
+        あなたのことを、<br />
+        <em>どれだけ</em><br />
+        <span class="line-gold">知ってる？</span>
+      </h1>
+      <p class="hero-sub">
+        自分のパーソナル情報をAIに読ませ、5問クイズを自動生成。<br />
+        友人にシェアして、本当に分かり合えてるか確かめよう。
+      </p>
+      <div class="hero-actions">
+        <a href="index.html" class="btn-primary">
+          クイズを作る
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="#how" class="btn-ghost">使い方を見る</a>
+      </div>
+      <div class="hero-stat-row">
+        <div class="hero-stat">
+          <span class="hero-stat-num">5</span>
+          <span class="hero-stat-label">問のクイズ</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-num">4</span>
+          <span class="hero-stat-label">択の選択肢</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-num">0</span>
+          <span class="hero-stat-label">円 ・ 登録不要</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE STRIP -->
+  <div class="concept-strip">
+    <div class="concept-track" aria-hidden="true">
+      <!-- duplicated for infinite loop -->
+      <div class="concept-item"><span class="dot"></span> AIで自動生成</div>
+      <div class="concept-item"><span class="dot"></span> No Account Required</div>
+      <div class="concept-item"><span class="dot"></span> URLで即シェア</div>
+      <div class="concept-item"><span class="dot"></span> QRコード対応</div>
+      <div class="concept-item"><span class="dot"></span> 完全無料</div>
+      <div class="concept-item"><span class="dot"></span> 日本語・English対応</div>
+      <div class="concept-item"><span class="dot"></span> 編集可能な設問</div>
+      <div class="concept-item"><span class="dot"></span> Share with Friends</div>
+      <!-- duplicate -->
+      <div class="concept-item"><span class="dot"></span> AIで自動生成</div>
+      <div class="concept-item"><span class="dot"></span> No Account Required</div>
+      <div class="concept-item"><span class="dot"></span> URLで即シェア</div>
+      <div class="concept-item"><span class="dot"></span> QRコード対応</div>
+      <div class="concept-item"><span class="dot"></span> 完全無料</div>
+      <div class="concept-item"><span class="dot"></span> 日本語・English対応</div>
+      <div class="concept-item"><span class="dot"></span> 編集可能な設問</div>
+      <div class="concept-item"><span class="dot"></span> Share with Friends</div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section steps-section" id="how">
+    <div class="section-inner">
+      <div class="section-label reveal">How it works</div>
+      <h2 class="section-title reveal" style="transition-delay:0.1s">
+        3ステップで<br />クイズが完成
+      </h2>
+      <p class="section-desc reveal" style="transition-delay:0.2s">
+        アカウント不要。AIに渡すだけで、友人が楽しめる本格クイズが生まれる。
+      </p>
+      <div class="steps-grid">
+        <div class="step-card reveal">
+          <div class="step-num">01</div>
+          <div class="step-icon step-icon-1">🧠</div>
+          <div class="step-tag step-tag-1">Step 01</div>
+          <h3 class="step-title">自分のことを書く</h3>
+          <p class="step-desc">
+            名前・趣味・口ぐせ・価値観など、自分を語るテキストを自由に入力。
+            アプリがAI用プロンプトを自動で作ってくれる。
+          </p>
+          <div class="step-detail">
+            <p>「Make Prompt」ボタンを押してChatGPT/Claudeにコピペするだけ。</p>
+          </div>
+        </div>
+        <div class="step-card reveal" style="transition-delay:0.1s">
+          <div class="step-num">02</div>
+          <div class="step-icon step-icon-2">✂️</div>
+          <div class="step-tag step-tag-2">Step 02</div>
+          <h3 class="step-title">設問を確認・編集</h3>
+          <p class="step-desc">
+            AIが生成したJSONをインポート。設問・選択肢・正解・解説を
+            自分好みに細かく編集できる。
+          </p>
+          <div class="step-detail">
+            <p>クオリティチェックしてから公開できるので安心。</p>
+          </div>
+        </div>
+        <div class="step-card reveal" style="transition-delay:0.2s">
+          <div class="step-num">03</div>
+          <div class="step-icon step-icon-3">🔗</div>
+          <div class="step-tag step-tag-3">Step 03</div>
+          <h3 class="step-title">URLをシェア</h3>
+          <p class="step-desc">
+            ワンクリックでコピーできるURLまたはQRコードを
+            友人に送るだけ。インストール不要でその場で遊べる。
+          </p>
+          <div class="step-detail">
+            <p>結果は「完璧！」から「はじめまして級」まで5段階で判定。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section features-section" id="features">
+    <div class="section-inner">
+      <div class="features-layout">
+        <div class="features-lead reveal">
+          <div class="section-label">Features</div>
+          <h2 class="section-title">
+            余計なものは<br />一切ない
+          </h2>
+          <p class="section-desc" style="margin-top:16px">
+            シンプルに作って、シンプルにシェアする。
+            それだけで十分に楽しい。
+          </p>
+          <a href="index.html" class="btn-primary" style="display:inline-flex; margin-top:36px">
+            今すぐ試す →
+          </a>
+        </div>
+        <div class="features-list">
+          <div class="feature-item reveal">
+            <div class="feature-icon">🤖</div>
+            <div class="feature-content">
+              <h3 class="feature-title">AI生成 × 手動レビュー</h3>
+              <p class="feature-desc">ChatGPTやClaudeに渡してJSONを生成。インポート前に必ず確認できるから、変な設問を公開してしまうリスクがない。</p>
+            </div>
+          </div>
+          <div class="feature-item reveal" style="transition-delay:0.05s">
+            <div class="feature-icon">✏️</div>
+            <div class="feature-content">
+              <h3 class="feature-title">インライン編集</h3>
+              <p class="feature-desc">設問・選択肢・正解・解説をそのままブラウザ上で編集できる。JSONを直接いじる必要はない。</p>
+            </div>
+          </div>
+          <div class="feature-item reveal" style="transition-delay:0.1s">
+            <div class="feature-icon">📱</div>
+            <div class="feature-content">
+              <h3 class="feature-title">QRコードで即シェア</h3>
+              <p class="feature-desc">その場でQRコードを表示。スマホのカメラを向けるだけでクイズ画面に飛べる。</p>
+            </div>
+          </div>
+          <div class="feature-item reveal" style="transition-delay:0.15s">
+            <div class="feature-icon">🌐</div>
+            <div class="feature-content">
+              <h3 class="feature-title">日本語・English 対応</h3>
+              <p class="feature-desc">UIはワンタップで日英切り替え可能。クイズの内容も両言語で作れるので、海外の友人にも送れる。</p>
+            </div>
+          </div>
+          <div class="feature-item reveal" style="transition-delay:0.2s">
+            <div class="feature-icon">🔒</div>
+            <div class="feature-content">
+              <h3 class="feature-title">完全ローカル・無料</h3>
+              <p class="feature-desc">サーバーなし、アカウントなし、APIキーなし。データはあなたのブラウザにだけ保存される。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCORE SHOWCASE -->
+  <section class="section scores-section" id="scores">
+    <div class="section-inner">
+      <div class="section-label reveal">Result levels</div>
+      <h2 class="section-title reveal" style="transition-delay:0.1s">
+        正解数で分かる、<br />あなたとの距離
+      </h2>
+      <p class="section-desc reveal" style="transition-delay:0.2s">
+        5問中何問正解できた？ 結果で本当の関係性が見えてくる。
+      </p>
+    </div>
+    <div class="section-inner">
+      <div class="scores-grid">
+        <div class="score-card reveal">
+          <div class="score-num">0</div>
+          <div class="score-label">/ 5 correct</div>
+          <div class="score-msg">はじめまして級</div>
+        </div>
+        <div class="score-card reveal" style="transition-delay:0.08s">
+          <div class="score-num">1–2</div>
+          <div class="score-label">/ 5 correct</div>
+          <div class="score-msg">まだ伸びしろあり</div>
+        </div>
+        <div class="score-card reveal" style="transition-delay:0.16s">
+          <div class="score-num">3</div>
+          <div class="score-label">/ 5 correct</div>
+          <div class="score-msg">友人として順調</div>
+        </div>
+        <div class="score-card reveal" style="transition-delay:0.24s">
+          <div class="score-num">4</div>
+          <div class="score-label">/ 5 correct</div>
+          <div class="score-msg">かなり分かってる</div>
+        </div>
+        <div class="score-card reveal" style="transition-delay:0.32s">
+          <div class="score-num">5</div>
+          <div class="score-label">/ 5 correct</div>
+          <div class="score-msg">完璧！ストーカー？</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-inner">
+      <div class="reveal">
+        <h2 class="cta-title">
+          さあ、<em>あなたの</em><br />
+          クイズを作ろう。
+        </h2>
+        <p class="cta-sub">
+          登録不要・完全無料。今すぐ始めて、友人との理解度を確かめよう。
+        </p>
+      </div>
+      <div class="cta-action reveal" style="transition-delay:0.15s">
+        <a href="index.html" class="btn-primary">
+          クイズを作る
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <span class="cta-note">No sign-up required</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <a href="index.html" class="footer-logo">WHOAMI QUIZ</a>
+      <span class="footer-copy">Built with AI. Made for friends.</span>
+    </div>
+  </footer>
+
+  <script>
+    // Intersection Observer for reveal animations
+    const reveals = document.querySelectorAll(".reveal");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-visible");
+            observer.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+    reveals.forEach((el) => observer.observe(el));
+  </script>
+</body>
+</html>

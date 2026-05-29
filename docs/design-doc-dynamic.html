@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design Doc: Whoami Quiz 動的サイト アーキテクチャ</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-card: #161b22;
+      --bg-card2: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --teal: #00d4b8;
+      --orange: #ff7b72;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    /* ─── header ─── */
+    header {
+      background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2rem 2.5rem 1.5rem;
+    }
+    .doc-meta {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.2em 0.7em;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+    .badge-draft   { background: rgba(210,153,34,0.15); color: var(--yellow); border: 1px solid rgba(210,153,34,0.4); }
+    .badge-product { background: rgba(0,212,184,0.12); color: var(--teal);   border: 1px solid rgba(0,212,184,0.35); }
+    .badge-phase   { background: rgba(88,166,255,0.12); color: var(--accent); border: 1px solid rgba(88,166,255,0.35); }
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: #fff;
+    }
+    .doc-subtitle { color: var(--text-muted); font-size: 13px; }
+
+    /* ─── layout ─── */
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+    section { margin-bottom: 2.5rem; }
+
+    /* ─── section heading ─── */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.2rem;
+    }
+    .section-num {
+      background: var(--accent);
+      color: #0d1117;
+      width: 1.6em;
+      height: 1.6em;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    h3 { font-size: 0.9rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 1.2rem 0 0.6rem; }
+
+    /* ─── feature unlock grid ─── */
+    .unlock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 0.9rem;
+    }
+    .unlock-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1rem 0.8rem;
+    }
+    .unlock-card .icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+    .unlock-card .title { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.3rem; color: #fff; }
+    .unlock-card .before { font-size: 0.78rem; color: var(--red); margin-bottom: 0.2rem; }
+    .unlock-card .after  { font-size: 0.78rem; color: var(--green); }
+
+    /* ─── arch diagram ─── */
+    .arch-diagram {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem 1.5rem 1.2rem;
+      font-family: "JetBrains Mono", "SF Mono", "Consolas", monospace;
+      font-size: 0.8rem;
+    }
+    .arch-node {
+      display: inline-block;
+      padding: 0.3em 0.8em;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+    .arch-browser { background: rgba(88,166,255,0.15); border: 1px solid var(--accent); color: var(--accent); }
+    .arch-vercel  { background: rgba(63,185,80,0.12); border: 1px solid var(--green); color: var(--green); }
+    .arch-kv      { background: rgba(188,140,255,0.12); border: 1px solid var(--purple); color: var(--purple); }
+    .arch-groq    { background: rgba(0,212,184,0.12); border: 1px solid var(--teal); color: var(--teal); }
+    .arch-line { color: var(--text-muted); margin: 0.35rem 0; padding-left: 1rem; }
+    .arch-arrow { color: var(--yellow); margin-right: 0.3rem; }
+    .arch-endpoint { color: var(--accent); }
+    .arch-comment  { color: var(--text-muted); font-style: italic; }
+
+    /* ─── tables ─── */
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+    th {
+      background: var(--bg-card2);
+      text-align: left;
+      padding: 0.6em 0.9em;
+      color: var(--text-muted);
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+    td {
+      padding: 0.55em 0.9em;
+      border: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+    .adopted { background: rgba(63,185,80,0.06) !important; }
+    .adopted td { color: var(--text); }
+    .rejected td { color: var(--text-muted); }
+    .chip {
+      display: inline-block;
+      padding: 0.15em 0.5em;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .chip-green  { background: rgba(63,185,80,0.15);  color: var(--green); }
+    .chip-red    { background: rgba(248,81,73,0.15);  color: var(--red); }
+    .chip-yellow { background: rgba(210,153,34,0.15); color: var(--yellow); }
+    .chip-blue   { background: rgba(88,166,255,0.15); color: var(--accent); }
+    .chip-purple { background: rgba(188,140,255,0.15);color: var(--purple); }
+
+    /* ─── cost table highlight ─── */
+    .cost-zero { color: var(--green); font-weight: 700; }
+    .cost-total td { background: rgba(63,185,80,0.08) !important; font-weight: 700; }
+
+    /* ─── code block ─── */
+    pre {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", "SF Mono", "Consolas", monospace;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: #c9d1d9;
+    }
+    code { font-family: inherit; }
+    .kw   { color: #ff7b72; }  /* keyword */
+    .str  { color: #a5d6ff; }  /* string */
+    .fn   { color: #d2a8ff; }  /* function */
+    .cm   { color: #8b949e; font-style: italic; } /* comment */
+    .var  { color: #ffa657; }  /* variable/const */
+
+    /* ─── migration steps ─── */
+    .steps { display: flex; flex-direction: column; gap: 0.8rem; }
+    .step {
+      display: flex;
+      gap: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      position: relative;
+    }
+    .step-done { border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.04); }
+    .step-num {
+      width: 2rem; height: 2rem;
+      border-radius: 50%;
+      background: var(--bg-card2);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      color: var(--text-muted);
+    }
+    .step-done .step-num { border-color: var(--green); color: var(--green); background: rgba(63,185,80,0.1); }
+    .step-body h4 { font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem; }
+    .step-body p  { font-size: 0.8rem; color: var(--text-muted); }
+    .step-time { margin-left: auto; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; align-self: flex-start; }
+
+    /* ─── open issues ─── */
+    .issues { display: flex; flex-direction: column; gap: 0.7rem; }
+    .issue {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--yellow);
+      border-radius: 0 8px 8px 0;
+      padding: 0.8rem 1rem;
+    }
+    .issue-title { font-weight: 700; font-size: 0.85rem; color: #fff; margin-bottom: 0.3rem; }
+    .issue-body  { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+    .issue-rec   { font-size: 0.78rem; color: var(--teal); margin-top: 0.4rem; }
+
+    /* ─── tradeoff table ─── */
+    .tradeoff-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.7rem;
+    }
+    @media (max-width: 640px) {
+      .tradeoff-grid { grid-template-columns: 1fr; }
+      .unlock-grid   { grid-template-columns: 1fr 1fr; }
+    }
+    .tradeoff-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.8rem;
+    }
+    .tradeoff-card .decision { font-size: 0.8rem; font-weight: 700; color: var(--accent); margin-bottom: 0.4rem; }
+    .tradeoff-card .gain, .tradeoff-card .lose { font-size: 0.75rem; margin-bottom: 0.2rem; }
+    .tradeoff-card .gain::before { content: "✓ "; color: var(--green); }
+    .tradeoff-card .lose::before { content: "△ "; color: var(--yellow); }
+
+    /* ─── footer ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    p.note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 0.9rem;
+      margin-top: 0.8rem;
+    }
+    p.note strong { color: var(--text); }
+
+    ul.feature-list {
+      list-style: none;
+      padding: 0;
+      display: flex; flex-direction: column; gap: 0.3rem;
+      margin-top: 0.4rem;
+    }
+    ul.feature-list li { font-size: 0.83rem; color: var(--text-muted); padding-left: 1.2em; position: relative; }
+    ul.feature-list li::before { content: "→"; position: absolute; left: 0; color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header>
+  <div class="doc-meta">
+    <span class="badge badge-draft">DRAFT</span>
+    <span class="badge badge-product">whoami-quiz</span>
+    <span class="badge badge-phase">フェーズ 1.5</span>
+  </div>
+  <h1>Design Doc: Whoami Quiz 動的サイト アーキテクチャ</h1>
+  <div class="doc-subtitle">
+    Author: architect　／　Reviewer: architecture-reviewer（要レビュー）　／　Created: 2026-05-29<br>
+    Supersedes: <code>decisions/20260526-whoami-quiz-architecture.md</code>（継承・拡張）
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ═══════════ 1. 動的化の理由 ═══════════ -->
+  <section>
+    <div class="section-title"><span class="section-num">1</span> 動的化の理由</div>
+
+    <h3>現状</h3>
+    <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:1rem;">
+      Whoami Quiz は静的 HTML/CSS/JS として存在する。Vercel Functions による Groq API プロキシ設計が確定し、フェーズ1（バイラル検証）が進行中。
+      創業者承認（2026-05-29）を受けて以下4機能を解禁するための動的化設計を行う。
+    </p>
+
+    <div class="unlock-grid">
+      <div class="unlock-card">
+        <div class="icon">✉️</div>
+        <div class="title">ウェイトリスト</div>
+        <div class="before">✗ メール収集手段がない</div>
+        <div class="after">✓ DB に保存可能</div>
+      </div>
+      <div class="unlock-card">
+        <div class="icon">🔐</div>
+        <div class="title">API キー保護</div>
+        <div class="before">✗ クライアントに露出 / BYOK</div>
+        <div class="after">✓ 環境変数で完全隠蔽</div>
+      </div>
+      <div class="unlock-card">
+        <div class="icon">🔗</div>
+        <div class="title">短縮 URL</div>
+        <div class="before">✗ ハッシュが 200〜400 文字</div>
+        <div class="after">✓ /q/abc123 でシェア</div>
+      </div>
+      <div class="unlock-card">
+        <div class="icon">🖼️</div>
+        <div class="title">動的 OGP</div>
+        <div class="before">✗ 静的 ogp.png 1枚のみ</div>
+        <div class="after">✓ スコア入り画像（Ph.2）</div>
+      </div>
+    </div>
+
+    <p class="note"><strong>継承して変更しない決定:</strong> ホスティング=Vercel、LLM=Groq Llama 3.3 70B（変更不可）、フロントエンド=既存 HTML/CSS/JS 流用、フレームワーク最小限</p>
+  </section>
+
+  <!-- ═══════════ 2. 選択肢比較 ═══════════ -->
+  <section>
+    <div class="section-title"><span class="section-num">2</span> ホスティング選択肢比較</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>選択肢</th><th>月額コスト</th><th>API キー保護</th><th>KV / DB</th><th>DX</th><th>判定</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="adopted">
+            <td><strong>Vercel Hobby + Functions</strong></td>
+            <td class="cost-zero">$0</td>
+            <td>環境変数 ◎</td>
+            <td>Vercel KV 無料枠</td>
+            <td>高い</td>
+            <td><span class="chip chip-green">採用</span></td>
+          </tr>
+          <tr class="rejected">
+            <td>Vercel Pro</td>
+            <td>$20/月</td>
+            <td>同上</td>
+            <td>同上</td>
+            <td>高い</td>
+            <td><span class="chip chip-yellow">予算上限・条件付き</span></td>
+          </tr>
+          <tr class="rejected">
+            <td>AWS Lambda + S3</td>
+            <td>$0〜$5</td>
+            <td>環境変数 ◎</td>
+            <td>DynamoDB / S3</td>
+            <td>低い（IAM複雑）</td>
+            <td><span class="chip chip-red">却下</span></td>
+          </tr>
+          <tr class="rejected">
+            <td>GCP Cloud Functions</td>
+            <td>$0〜$3</td>
+            <td>Secret Manager</td>
+            <td>Firestore 無料枠</td>
+            <td>中（ローカル複雑）</td>
+            <td><span class="chip chip-red">却下</span></td>
+          </tr>
+          <tr class="rejected">
+            <td>Cloudflare Workers + KV</td>
+            <td>$0</td>
+            <td>環境変数 ◎</td>
+            <td>Workers KV 無料枠</td>
+            <td>中（独自API）</td>
+            <td><span class="chip chip-blue">次善（将来候補）</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Vercel Hobby 採用根拠</h3>
+    <ul class="feature-list">
+      <li>静的フロントと Functions が同一デプロイで完結（CI/CD コスト最小）</li>
+      <li>Vercel KV（Redis互換）・Vercel OG が同リポジトリで使える</li>
+      <li>創業者がすでに利用経験のあるプラットフォーム</li>
+      <li>CLI（vercel コマンド）でデプロイ・ログ・env 管理が完結</li>
+    </ul>
+  </section>
+
+  <!-- ═══════════ 3. 採用構成 & コスト ═══════════ -->
+  <section>
+    <div class="section-title"><span class="section-num">3</span> 採用構成 &amp; コスト試算</div>
+
+    <h3>アーキテクチャ図</h3>
+    <div class="arch-diagram">
+      <div style="margin-bottom:0.5rem"><span class="arch-node arch-browser">ブラウザ</span></div>
+      <div class="arch-line"><span class="arch-arrow">↓ HTTPS</span></div>
+      <div style="margin-bottom:0.3rem"><span class="arch-node arch-vercel">Vercel (静的 HTML/CSS/JS + Functions)</span></div>
+      <div class="arch-line">├─ <span class="arch-endpoint">GET  /q/:id</span>        <span class="arch-arrow">→</span> <span class="arch-node arch-kv" style="padding:0.1em 0.5em;font-size:0.78rem;">Vercel KV</span> から quiz JSON 取得</div>
+      <div class="arch-line">├─ <span class="arch-endpoint">POST /api/shorten</span> <span class="arch-arrow">→</span> quiz JSON を KV 保存 → shortId 返却</div>
+      <div class="arch-line">├─ <span class="arch-endpoint">POST /api/generate</span><span class="arch-arrow">→</span> <span class="arch-node arch-groq" style="padding:0.1em 0.5em;font-size:0.78rem;">Groq API</span> 呼び出し（キー隠蔽）</div>
+      <div class="arch-line">├─ <span class="arch-endpoint">POST /api/waitlist</span> <span class="arch-arrow">→</span> <span class="arch-node arch-kv" style="padding:0.1em 0.5em;font-size:0.78rem;">Vercel KV</span> にメアド保存</div>
+      <div class="arch-line">└─ <span class="arch-endpoint">GET  /api/og</span>        <span class="arch-arrow">→</span> <span class="arch-comment">Vercel OG でスコア入り画像（フェーズ2）</span></div>
+    </div>
+
+    <h3 style="margin-top:1.2rem;">コスト試算（月額）</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>項目</th><th>無料枠</th><th>想定使用量（月）</th><th>コスト</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Vercel Hobby（フロント + Functions）</td>
+            <td>無制限 PV、100万 Function 実行</td>
+            <td>生成 500回 + KV 操作 2,000回</td>
+            <td class="cost-zero">$0</td>
+          </tr>
+          <tr>
+            <td>Vercel KV（Redis互換）</td>
+            <td>30,000 コマンド/日、256MB ストレージ</td>
+            <td>URL 500件 + WL 200件</td>
+            <td class="cost-zero">$0</td>
+          </tr>
+          <tr>
+            <td>Groq API（Llama 3.3 70B）</td>
+            <td>1,000 req/日 無料</td>
+            <td>500回 × 800 tokens = 400K tokens</td>
+            <td class="cost-zero">$0</td>
+          </tr>
+          <tr>
+            <td>Resend（確認メール・任意）</td>
+            <td>100 emails/日、3,000/月</td>
+            <td>WL 確認メール 200通</td>
+            <td class="cost-zero">$0</td>
+          </tr>
+          <tr class="cost-total">
+            <td colspan="3"><strong>合計</strong></td>
+            <td class="cost-zero">$0 / 月</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>超過時の費用</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>トリガー</th><th>追加コスト</th></tr></thead>
+        <tbody>
+          <tr><td>Groq 有料移行（1,000 req/日超）</td><td>$0.59/M tokens → 月 10,000 回生成で $4.72</td></tr>
+          <tr><td>Vercel KV 容量超過（256MB超）</td><td>KV Starter $0.30/100万コマンド（実質 $0〜$1）</td></tr>
+          <tr><td>Vercel Pro 移行（タイムアウト超）</td><td>$20/月（月$20制約の上限）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note"><strong>結論:</strong> フェーズ1.5 は月 <strong style="color:var(--green);">$0</strong> で動作可能。最悪ケースでも月$20 を超えない。</p>
+  </section>
+
+  <!-- ═══════════ 4. API キー保護 ═══════════ -->
+  <section>
+    <div class="section-title"><span class="section-num">4</span> Groq API キー保護</div>
+
+    <pre><code><span class="cm"># Vercel ダッシュボード → Settings → Environment Variables</span>
+GROQ_API_KEY=gsk_...
+
+<span class="cm"># /api/generate.js — Edge Runtime で API キー隠蔽 + レート制限</span>
+<span class="kw">export const</span> <span class="var">config</span> = { <span class="var">runtime</span>: <span class="str">"edge"</span> };  <span class="cm">// 30秒タイムアウト（Hobby 10秒制限を回避）</span>
+
+<span class="cm">// CORS: 同一オリジンのみ許可</span>
+<span class="kw">const</span> <span class="var">allowedOrigins</span> = [
+  <span class="str">"https://whoami-quiz.app"</span>,
+  process.env.VERCEL_URL ? <span class="str">`https://${process.env.VERCEL_URL}`</span> : <span class="kw">null</span>,
+].filter(Boolean);
+
+<span class="cm">// IP 別レート制限 — Vercel KV で 10 req/IP/日</span>
+<span class="kw">async function</span> <span class="fn">checkRateLimit</span>(ip) {
+  <span class="kw">const</span> key = <span class="str">`ratelimit:${ip}:${new Date().toISOString().slice(0,10)}`</span>;
+  <span class="kw">const</span> count = <span class="kw">await</span> kv.<span class="fn">incr</span>(key);
+  <span class="kw">if</span> (count === 1) <span class="kw">await</span> kv.<span class="fn">expire</span>(key, 86400);
+  <span class="kw">return</span> count <= 10;
+}</code></pre>
+
+    <p class="note">Edge Runtime を使うと Vercel Hobby でも <strong>30秒タイムアウト</strong>が使える（通常の Functions は 10秒）。Groq SDK との互換性は実装時に確認が必要（architecture-reviewer 9-3 参照）。</p>
+  </section>
+
+  <!-- ═══════════ 5. ウェイトリスト ═══════════ -->
+  <section>
+    <div class="section-title"><span class="section-num">5</span> ウェイトリスト実装</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>選択肢</th><th>コスト</th><th>セットアップ</th><th>データ所有</th><th>判定</th></tr>
+        </thead>
+        <tbody>
+          <tr class="adopted">
+            <td><strong>Tally.so embed</strong></td>
+            <td class="cost-zero">無料</td>
+            <td><strong>5分</strong>（iframe 1行）</td>
+            <td>Tally 所有（CSV エクスポート可）</td>
+            <td><span class="chip chip-green">推奨 A</span></td>
+          </tr>
+          <tr>
+            <td>Vercel KV + 自前 API</td>
+            <td class="cost-zero">無料</td>
+            <td>2〜3時間</td>
+            <td>完全自己所有</td>
+            <td><span class="chip chip-blue">推奨 B（登録500人超で移行）</span></td>
+          </tr>
+          <tr class="rejected">
+            <td>Resend Audience</td>
+            <td>無料枠（3,000件）</td>
+            <td>30分</td>
+            <td>Resend 所有</td>
+            <td><span class="chip chip-yellow">次善</span></td>
+          </tr>
+          <tr class="rejected">
+            <td>Supabase Postgres</td>
+            <td>無料枠</td>
+            <td>1〜2時間</td>
+            <td>完全自己所有</td>
+            <td><span class="chip chip-red">オーバーキル（Ph.1）</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note"><strong>移行トリガー（推奨A → 推奨B）:</strong> ウェイトリスト登録者 500人超、または登録後の自動メール送信・セグメント管理が必要になった場合。</p>
+  </section>
+
+  <!-- ═══════════ 6. 短縮 URL ═══════════ -->
+  <section>
+    <div class="section-title"><span class="section-num">6</span> 短縮 URL（Vercel KV + nanoid）</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>選択肢</th><th>コスト</th><th>工数</th><th>URL 例</th><th>判定</th></tr></thead>
+        <tbody>
+          <tr class="adopted">
+            <td><strong>Vercel KV 自前実装</strong></td>
+            <td class="cost-zero">$0</td>
+            <td>2〜3時間</td>
+            <td>whoami-quiz.app/q/abc123</td>
+            <td><span class="chip chip-green">採用</span></td>
+          </tr>
+          <tr class="rejected">
+            <td>Bitly API</td>
+            <td>無料枠 1,000 links/月</td>
+            <td>1時間</td>
+            <td>bit.ly/xxxxx</td>
+            <td><span class="chip chip-red">却下（自ドメインでない）</span></td>
+          </tr>
+          <tr class="rejected">
+            <td>TinyURL</td>
+            <td>無料</td>
+            <td>30分</td>
+            <td>tinyurl.com/xxx</td>
+            <td><span class="chip chip-red">却下（同上）</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>フロー</h3>
+    <pre><code><span class="cm">// クイズ作成後: POST /api/shorten { quiz: JSONオブジェクト }</span>
+<span class="kw">import</span> { <span class="var">nanoid</span> } from <span class="str">"nanoid"</span>;
+
+<span class="kw">const</span> shortId = <span class="fn">nanoid</span>(6);  <span class="cm">// 例: "abc123" — 560億通りで衝突ほぼゼロ</span>
+<span class="kw">await</span> kv.<span class="fn">set</span>(<span class="str">`quiz:${shortId}`</span>, quizJSON);  <span class="cm">// TTL なし推奨</span>
+<span class="kw">return</span> { shortId };
+
+<span class="cm">// シェア URL: https://whoami-quiz.app/q/abc123</span>
+<span class="cm">// 既存ハッシュ URL (/#q2=...) は後方互換で永続動作</span></code></pre>
+
+    <p class="note"><strong>TTL:</strong> なしを推奨。1クイズ JSON ≈ 2KB。月500件 × 12ヶ月 = 6,000件/年。256MB 無料枠で実質 20年分保存可能。</p>
+  </section>
+
+  <!-- ═══════════ 7. 動的 OGP ═══════════ -->
+  <section>
+    <div class="section-title"><span class="section-num">7</span> 動的 OGP（フェーズ2延期）</div>
+
+    <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:1rem;">
+      フェーズ1.5 は静的 <code>ogp.png</code> を維持。動的 OGP はショートURL 実装後に着手。
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>条件</th><th>アクション</th></tr></thead>
+        <tbody>
+          <tr><td>月間シェアクリック &lt; 500</td><td>静的 OGP 継続</td></tr>
+          <tr><td>月間シェアクリック ≥ 500</td><td>architecture-reviewer + eng-lead に動的 OGP 実装の Decision Request</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>フェーズ2 実装設計（参考）</h3>
+    <pre><code><span class="cm">// GET /api/og?id=abc123&score=4&total=5 — Vercel OG（@vercel/og）</span>
+<span class="kw">import</span> { <span class="var">ImageResponse</span> } from <span class="str">"@vercel/og"</span>;
+<span class="kw">export const</span> config = { runtime: <span class="str">"edge"</span> };
+
+<span class="kw">export default function</span> <span class="fn">handler</span>(req) {
+  <span class="kw">const</span> { score, total } = Object.<span class="fn">fromEntries</span>(<span class="kw">new</span> <span class="fn">URL</span>(req.url).searchParams);
+  <span class="kw">return new</span> <span class="fn">ImageResponse</span>(
+    &lt;div style={{ background: <span class="str">"#0f1117"</span>, width: <span class="str">"1200px"</span>, height: <span class="str">"630px"</span>,
+                  display: <span class="str">"flex"</span>, flexDirection: <span class="str">"column"</span>,
+                  alignItems: <span class="str">"center"</span>, justifyContent: <span class="str">"center"</span>, color: <span class="str">"#fff"</span> }}&gt;
+      &lt;div style={{ fontSize: 80, fontWeight: 700 }}&gt;{score}/{total}&lt;/div&gt;
+      &lt;div style={{ fontSize: 36, color: <span class="str">"#00d4b8"</span> }}&gt;Whoami Quiz&lt;/div&gt;
+    &lt;/div&gt;,
+    { width: 1200, height: 630 }
+  );
+}</code></pre>
+  </section>
+
+  <!-- ═══════════ 8. 移行計画 ═══════════ -->
+  <section>
+    <div class="section-title"><span class="section-num">8</span> 段階的移行計画</div>
+
+    <div class="steps">
+      <div class="step step-done">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <h4>✅ Groq API プロキシ（完了済み）</h4>
+          <p><code>POST /api/generate</code> — decisions/20260526-whoami-quiz-architecture.md で設計済み</p>
+        </div>
+        <div class="step-time">完了</div>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>短縮 URL</h4>
+          <p><code>api/shorten.js</code> + <code>api/quiz.js</code> 新規作成。既存機能に影響なし。ロールバック: ファイル削除のみ。</p>
+        </div>
+        <div class="step-time">2〜3 時間</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>ウェイトリスト</h4>
+          <p>Tally.so なら <code>&lt;iframe&gt;</code> 追加のみ（1〜5時間）。Vercel KV 自前なら <code>api/waitlist.js</code> 追加。</p>
+        </div>
+        <div class="step-time">1〜5 時間</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>動的 OGP（フェーズ2）</h4>
+          <p>月間シェアクリック 500回超を確認後。<code>api/og.js</code> 追加のみ。既存実装への影響ゼロ。</p>
+        </div>
+        <div class="step-time">フェーズ2</div>
+      </div>
+    </div>
+
+    <p class="note"><strong>移行原則:</strong> 既存ハッシュ URL（/#q2=...）は永続動作保証。各ステップは独立デプロイ可能。データロス不可（KV 保存クイズは削除しない）。</p>
+  </section>
+
+  <!-- ═══════════ 9. 未解決事項 ═══════════ -->
+  <section>
+    <div class="section-title"><span class="section-num">9</span> 未解決事項（architecture-reviewer 差し戻しポイント）</div>
+
+    <div class="issues">
+      <div class="issue">
+        <div class="issue-title">9-1　短縮 URL の TTL 設計妥当性</div>
+        <div class="issue-body">現行設定 90日 TTL → 変更案はなし（256MB 無料枠で実質20年分保存可能）</div>
+        <div class="issue-rec">architect 推奨: TTL なし。architecture-reviewer の確認求む。</div>
+      </div>
+      <div class="issue">
+        <div class="issue-title">9-2　Vercel KV の可用性（SLA 99.9%）</div>
+        <div class="issue-body">KV 障害時にショート URL が 404 になるリスク。代替: LocalStorage キャッシュ（フェーズ2）。</div>
+        <div class="issue-rec">architect 推奨: MVP では KV のみで十分。</div>
+      </div>
+      <div class="issue">
+        <div class="issue-title">9-3　Vercel Hobby Functions タイムアウト（10秒）</div>
+        <div class="issue-body">Groq Llama 3.3 70B はピーク時に 10秒に近づく可能性。Edge Runtime（30秒）で回避できるが Groq SDK 互換要確認。</div>
+        <div class="issue-rec">architect 推奨: まず Edge Runtime で実装し互換性を確認。</div>
+      </div>
+      <div class="issue">
+        <div class="issue-title">9-4　ウェイトリスト（Tally.so）GDPR リスク</div>
+        <div class="issue-body">Tally.so は EU 企業でないため、日本語ユーザーのメアドを外部に保存することの法的リスク。</div>
+        <div class="issue-rec">architecture-reviewer に法的リスク評価を求む。</div>
+      </div>
+      <div class="issue">
+        <div class="issue-title">9-5　動的 OGP とスコアの依存関係（UX 判断）</div>
+        <div class="issue-body">og:image URL にスコアを含める設計（/api/og?score=4&total=5）は回答者ごとに OGP が変わる。代替: OGP はクイズタイトルのみ固定。</div>
+        <div class="issue-rec">フェーズ2着手前に PM と確認が必要。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ TRADEOFF ═══════════ -->
+  <section>
+    <div class="section-title">トレードオフまとめ</div>
+    <div class="tradeoff-grid">
+      <div class="tradeoff-card">
+        <div class="decision">Vercel KV で短縮 URL</div>
+        <div class="gain">自前ドメイン・データ完全所有・$0</div>
+        <div class="lose">KV 障害時の可用性リスク</div>
+      </div>
+      <div class="tradeoff-card">
+        <div class="decision">TTL なし（推奨）</div>
+        <div class="gain">リンク切れなし</div>
+        <div class="lose">KV 容量消費（実質問題なし）</div>
+      </div>
+      <div class="tradeoff-card">
+        <div class="decision">Tally.so ウェイトリスト</div>
+        <div class="gain">実装 5分・確認メール自動送信</div>
+        <div class="lose">データが外部依存・カスタム不可</div>
+      </div>
+      <div class="tradeoff-card">
+        <div class="decision">動的 OGP フェーズ2延期</div>
+        <div class="gain">実装速度・シンプルさ</div>
+        <div class="lose">スコア入り画像による拡散力遅延</div>
+      </div>
+      <div class="tradeoff-card">
+        <div class="decision">Edge Runtime</div>
+        <div class="gain">30秒タイムアウト・高速 cold start</div>
+        <div class="lose">Node.js 一部 API 使用不可（要確認）</div>
+      </div>
+      <div class="tradeoff-card">
+        <div class="decision">Groq Llama 3.3 70B（既定）</div>
+        <div class="gain">1,000 req/日 無料・高速推論</div>
+        <div class="lose">無料枠 1,000 RPD → 制限タイト</div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /container -->
+
+<footer>
+  <span>📄 Design Doc v1 (draft)</span>
+  <span>Author: architect / Claude</span>
+  <span>Reviewer: architecture-reviewer（未完了）</span>
+  <span>Source: <code>decisions/20260529-whoami-dynamic-architecture.md</code></span>
+</footer>
+
+</body>
+</html>

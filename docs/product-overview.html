@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Whoami Quiz — Product Overview</title>
+  <style>
+    :root {
+      --bg:     #07070f;
+      --bg2:    #0f0f1c;
+      --bg3:    #181828;
+      --fg:     #ededf8;
+      --muted:  #7878a0;
+      --teal:   #00d4b8;
+      --gold:   #f5c518;
+      --pink:   #ff3d7f;
+      --green:  #22c55e;
+      --border: rgba(255,255,255,0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, "Noto Sans JP", sans-serif;
+      line-height: 1.6;
+      padding: 48px 24px 80px;
+      max-width: 900px;
+      margin: 0 auto;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+      flex-wrap: wrap;
+    }
+
+    .product-name {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 8px;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .page-meta {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .badge-phase { background: rgba(0,212,184,0.12); color: var(--teal); }
+
+    /* ── Section ── */
+    .section {
+      margin-bottom: 56px;
+    }
+
+    .section-title {
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::before {
+      content: "";
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: var(--teal);
+      flex-shrink: 0;
+    }
+
+    /* ── Summary card ── */
+    .summary-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 28px 32px;
+    }
+
+    .summary-card p {
+      color: var(--muted);
+      font-size: 0.96rem;
+      line-height: 1.75;
+    }
+
+    .summary-card strong { color: var(--fg); }
+
+    /* ── ICP row ── */
+    .icp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .icp-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px 24px;
+    }
+
+    .icp-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .icp-name {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .icp-desc {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .icp-primary .icp-name { color: var(--teal); }
+    .icp-secondary .icp-name { color: var(--gold); }
+
+    /* ── Appeal points ── */
+    .appeal-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .appeal-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 18px 22px;
+      display: grid;
+      grid-template-columns: 40px 1fr auto;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .appeal-icon {
+      font-size: 1.4rem;
+      text-align: center;
+    }
+
+    .appeal-body {}
+
+    .appeal-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .appeal-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .appeal-tag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      white-space: nowrap;
+      align-self: flex-start;
+    }
+
+    .tag-vs    { background: rgba(255,61,127,0.12); color: var(--pink); }
+    .tag-ux    { background: rgba(0,212,184,0.12);  color: var(--teal); }
+    .tag-data  { background: rgba(245,197,24,0.12); color: var(--gold); }
+    .tag-viral { background: rgba(34,197,94,0.12);  color: var(--green); }
+
+    /* ── Cost table ── */
+    .cost-phases {
+      display: grid;
+      gap: 12px;
+    }
+
+    .cost-phase {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .cost-phase-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .cost-phase-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .cost-phase-1 .cost-phase-name { color: var(--teal); }
+    .cost-phase-2 .cost-phase-name { color: var(--gold); }
+    .cost-phase-3 .cost-phase-name { color: var(--pink); }
+
+    .cost-price {
+      font-size: 1.4rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .cost-phase-1 .cost-price { color: var(--teal); }
+    .cost-phase-2 .cost-price { color: var(--gold); }
+    .cost-phase-3 .cost-price { color: var(--pink); }
+
+    .cost-price sup {
+      font-size: 0.75rem;
+      vertical-align: top;
+      margin-top: 3px;
+      margin-right: 2px;
+    }
+
+    .cost-phase-body {
+      padding: 16px 22px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .cost-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.84rem;
+      gap: 16px;
+    }
+
+    .cost-item { color: var(--muted); }
+    .cost-val  { font-weight: 600; color: var(--fg); white-space: nowrap; }
+
+    .cost-trigger {
+      padding: 10px 22px;
+      border-top: 1px solid var(--border);
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .cost-trigger strong { color: var(--fg); }
+
+    /* ── Monetization ── */
+    .mono-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .mono-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px 20px;
+    }
+
+    .mono-phase {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .mono-model {
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .mono-card:nth-child(1) .mono-model { color: var(--teal); }
+    .mono-card:nth-child(2) .mono-model { color: var(--gold); }
+    .mono-card:nth-child(3) .mono-model { color: var(--pink); }
+
+    .mono-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── Go conditions ── */
+    .go-list {
+      display: grid;
+      gap: 10px;
+      counter-reset: go;
+    }
+
+    .go-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 18px 20px;
+    }
+
+    .go-num {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--teal);
+      line-height: 1;
+      flex-shrink: 0;
+      width: 28px;
+    }
+
+    .go-text {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .go-text strong { color: var(--fg); }
+
+    /* ── Risks ── */
+    .risk-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .risk-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 18px 20px;
+    }
+
+    .risk-level {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .risk-high   { background: rgba(180,35,24,0.15);  color: #f87171; }
+    .risk-medium { background: rgba(245,197,24,0.12); color: var(--gold); }
+    .risk-low    { background: rgba(0,212,184,0.10);  color: var(--teal); }
+
+    .risk-body {}
+    .risk-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+    .risk-desc  { font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      body { padding: 28px 16px 60px; }
+      .icp-grid  { grid-template-columns: 1fr; }
+      .mono-grid { grid-template-columns: 1fr; }
+      .appeal-item { grid-template-columns: 36px 1fr; }
+      .appeal-tag { display: none; }
+      .cost-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="page-header">
+    <div>
+      <p class="product-name">Whoami Quiz</p>
+      <h1 class="page-title">Product Overview</h1>
+      <p class="page-meta">2026-05-29 ・ Phase 1: バイラル検証中</p>
+    </div>
+    <span class="badge badge-phase">MVP Shipped</span>
+  </header>
+
+  <!-- What is it -->
+  <section class="section">
+    <h2 class="section-title">What</h2>
+    <div class="summary-card">
+      <p>
+        <strong>自分のパーソナル情報をAIに読ませて、5問クイズを自動生成するWebアプリ。</strong>
+        友人・視聴者がURLにアクセスして回答し、正答数で「理解度」を可視化する。
+        クイズはURLハッシュに圧縮埋め込みで共有。<strong>アカウント不要・バックエンドなし・完全無料。</strong>
+        日英バイリンガル対応済み。配信者・VTuberがファンとのエンゲージメントを高め、
+        新規ファンの流入導線として使うことができる。
+      </p>
+    </div>
+  </section>
+
+  <!-- ICP -->
+  <section class="section">
+    <h2 class="section-title">ICP（誰のため）</h2>
+    <div class="icp-grid">
+      <div class="icp-card icp-primary">
+        <p class="icp-label">エントリーポイント</p>
+        <p class="icp-name">VTuber・個人配信者</p>
+        <p class="icp-desc">ファンへのエンゲージメントツールとして使う。配信後にクイズをシェアし、視聴者が拡散の種火になる。課金意欲が相対的に高い。</p>
+      </div>
+      <div class="icp-card icp-secondary">
+        <p class="icp-label">波及先</p>
+        <p class="icp-name">SNS若年層（10〜25歳）</p>
+        <p class="icp-desc">配信者の視聴者・ファンが回答→自分のクイズを作る逆バイラルが起きる。TikTok/X上の「どれだけ知ってる？」コンテンツ需要と一致。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Appeal points -->
+  <section class="section">
+    <h2 class="section-title">訴求ポイント</h2>
+    <div class="appeal-list">
+
+      <div class="appeal-item">
+        <div class="appeal-icon">🤖</div>
+        <div class="appeal-body">
+          <p class="appeal-title">AI自動生成（競合にない差別化）</p>
+          <p class="appeal-desc">friendquiz.me など既存競合は人間が手動で設問を作成するCGMモデル。AIが情報から自動生成するフローはカテゴリ内でまだ誰もやっていない。</p>
+        </div>
+        <span class="appeal-tag tag-vs">vs 競合</span>
+      </div>
+
+      <div class="appeal-item">
+        <div class="appeal-icon">🔗</div>
+        <div class="appeal-body">
+          <p class="appeal-title">URLだけで即プレイ・登録不要</p>
+          <p class="appeal-desc">回答者はURLを踏むだけでその場でプレイできる。アカウント登録・アプリインストール・APIキー不要。回答者の参加コストがほぼゼロ。</p>
+        </div>
+        <span class="appeal-tag tag-ux">UX</span>
+      </div>
+
+      <div class="appeal-item">
+        <div class="appeal-icon">✏️</div>
+        <div class="appeal-body">
+          <p class="appeal-title">設問をインライン編集できる</p>
+          <p class="appeal-desc">AIの生成品質が多少低くても作成者が手直しできる。「公開前にレビューできる」安心感がコンテンツクリエイターへの訴求になる。</p>
+        </div>
+        <span class="appeal-tag tag-ux">UX</span>
+      </div>
+
+      <div class="appeal-item">
+        <div class="appeal-icon">🔒</div>
+        <div class="appeal-body">
+          <p class="appeal-title">データはブラウザのみ・サーバーに送らない</p>
+          <p class="appeal-desc">バックエンドなし・静的アプリのため、個人情報がサーバーに保存されない。AIプライバシー懸念が高まる2026年において、これは明示的な訴求ポイントになる。</p>
+        </div>
+        <span class="appeal-tag tag-data">プライバシー</span>
+      </div>
+
+      <div class="appeal-item">
+        <div class="appeal-icon">📤</div>
+        <div class="appeal-body">
+          <p class="appeal-title">結果シェアがバイラルの種火になる</p>
+          <p class="appeal-desc">スコア結果をXにシェア → 「挑戦してみて」のCTAがクイズURLをセット展開 → 新規ユーザーが流入→自分もクイズを作る、というK-ファクターのループ設計。</p>
+        </div>
+        <span class="appeal-tag tag-viral">バイラル</span>
+      </div>
+
+      <div class="appeal-item">
+        <div class="appeal-icon">🌐</div>
+        <div class="appeal-body">
+          <p class="appeal-title">日英バイリンガル・海外展開済み</p>
+          <p class="appeal-desc">UI・設問・結果メッセージがすべて日英対応。navigator.languageで自動切替。仲間内フィードバック段階ですでに海外ユーザーへの展開が起きている。</p>
+        </div>
+        <span class="appeal-tag tag-ux">グローバル</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Cost structure -->
+  <section class="section">
+    <h2 class="section-title">コスト構造（プロダクト化時）</h2>
+    <div class="cost-phases">
+
+      <div class="cost-phase cost-phase-1">
+        <div class="cost-phase-header">
+          <span class="cost-phase-name">Phase 1 ― バイラル検証</span>
+          <span class="cost-price"><sup>$</sup>0<span style="font-size:0.9rem;font-weight:400;color:var(--muted)">/月</span></span>
+        </div>
+        <div class="cost-phase-body">
+          <div class="cost-row"><span class="cost-item">フロント + API（Vercel Hobby）</span><span class="cost-val">無料</span></div>
+          <div class="cost-row"><span class="cost-item">AI推論（Groq 無料枠）</span><span class="cost-val">1,000 req/日 無料</span></div>
+          <div class="cost-row"><span class="cost-item">ホスティング（静的）</span><span class="cost-val">無料</span></div>
+          <div class="cost-row"><span class="cost-item">アナリティクス（GA4）</span><span class="cost-val">無料</span></div>
+        </div>
+        <p class="cost-trigger">移行トリガー: 月間ユニーク回答者 <strong>500人超</strong> または Groq 無料枠が枯渇</p>
+      </div>
+
+      <div class="cost-phase cost-phase-2">
+        <div class="cost-phase-header">
+          <span class="cost-phase-name">Phase 2 ― 成長期</span>
+          <span class="cost-price"><sup>$</sup>20<span style="font-size:0.9rem;font-weight:400;color:var(--muted)">/月</span></span>
+        </div>
+        <div class="cost-phase-body">
+          <div class="cost-row"><span class="cost-item">Vercel Pro or Railway</span><span class="cost-val">~$20/月</span></div>
+          <div class="cost-row"><span class="cost-item">Groq 有料プラン（10x rate limit）</span><span class="cost-val">$0.59/M tokens</span></div>
+          <div class="cost-row"><span class="cost-item">クイズ1回生成コスト試算</span><span class="cost-val">約 $0.001〜$0.002</span></div>
+        </div>
+        <p class="cost-trigger">移行トリガー: K-ファクター検証済み、月間クイズ生成 <strong>1,000件超</strong></p>
+      </div>
+
+      <div class="cost-phase cost-phase-3">
+        <div class="cost-phase-header">
+          <span class="cost-phase-name">Phase 3 ― 自前LLMサーバー</span>
+          <span class="cost-price"><sup>$</sup>48<span style="font-size:0.9rem;font-weight:400;color:var(--muted)">/月</span></span>
+        </div>
+        <div class="cost-phase-body">
+          <div class="cost-row"><span class="cost-item">AWS EC2 t4g.xlarge（ARM 4コア 16GB）</span><span class="cost-val">~$48/月</span></div>
+          <div class="cost-row"><span class="cost-item">Ollama + Qwen2.5 7B（日本語品質◎）</span><span class="cost-val">推論コスト $0</span></div>
+          <div class="cost-row"><span class="cost-item">AWS CLIで運用・CloudWatchでコスト監視</span><span class="cost-val">—</span></div>
+        </div>
+        <p class="cost-trigger">移行メリット: AI API費用がゼロになる。月1,000件超えで損益分岐を超える。</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Monetization -->
+  <section class="section">
+    <h2 class="section-title">マネタイズ仮説</h2>
+    <div class="mono-grid">
+      <div class="mono-card">
+        <p class="mono-phase">Phase 1</p>
+        <p class="mono-model">完全無料</p>
+        <p class="mono-desc">バイラルを最優先。K-ファクター&gt;1を確認するまで課金設計をしない。MAUを先に積む。</p>
+      </div>
+      <div class="mono-card">
+        <p class="mono-phase">Phase 2</p>
+        <p class="mono-model">配信者向けサブスク</p>
+        <p class="mono-desc">設問数拡張・統計ダッシュボード・カスタムブランディングを月額で提供。課金意欲が高いVTuber/配信者層を先に取る。</p>
+      </div>
+      <div class="mono-card">
+        <p class="mono-phase">Phase 3</p>
+        <p class="mono-model">B2B / 法人</p>
+        <p class="mono-desc">VTuber事務所・企業のチームビルディング向けにSaaS化。単価は大きいが営業コストも高い。個人開発フェーズでは対象外。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Go conditions -->
+  <section class="section">
+    <h2 class="section-title">Phase 1 Go 条件（次フェーズへの移行判断）</h2>
+    <div class="go-list">
+      <div class="go-item">
+        <span class="go-num">1</span>
+        <p class="go-text"><strong>クイズURLが自発的にシェアされ、外部ユーザーが回答完了 10件</strong><br>数ではなく「補助なしで自発的にシェアされた」実績が条件。</p>
+      </div>
+      <div class="go-item">
+        <span class="go-num">2</span>
+        <p class="go-text"><strong>AI→URL発行まで補助なしで完走 5人</strong><br>冷たい流入ユーザーが手動フローを完走できるかの検証。</p>
+      </div>
+      <div class="go-item">
+        <span class="go-num">3</span>
+        <p class="go-text"><strong>配信者またはSNSインフルエンサーが実際に使用 1名以上</strong><br>エントリーポイントのICP（VTuber/配信者）への実使用確認。</p>
+      </div>
+      <div class="go-item">
+        <span class="go-num">4</span>
+        <p class="go-text"><strong>X上でのシェアからクイズへの流入が確認できる</strong><br>K-ファクターのループが始まっている証拠として。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Risks -->
+  <section class="section">
+    <h2 class="section-title">リスク</h2>
+    <div class="risk-list">
+      <div class="risk-item">
+        <span class="risk-level risk-high">High</span>
+        <div class="risk-body">
+          <p class="risk-title">参入障壁が低い</p>
+          <p class="risk-desc">「AIでクイズ生成」はAPI1本で実装可能。既存競合（friendquiz.me等）がAI機能を追加するウィンドウは6〜12ヶ月以内の可能性がある。ネットワーク効果の構築が急務。</p>
+        </div>
+      </div>
+      <div class="risk-item">
+        <span class="risk-level risk-medium">Medium</span>
+        <div class="risk-body">
+          <p class="risk-title">手動フローの摩擦</p>
+          <p class="risk-desc">現状のプロンプトコピペフローは技術リテラシーが必要。LP公開後の冷たい流入に対して離脱率が高い可能性。AI API統合（バックエンド）への移行タイミングをデータで判断する必要がある。</p>
+        </div>
+      </div>
+      <div class="risk-item">
+        <span class="risk-level risk-low">Low</span>
+        <div class="risk-body">
+          <p class="risk-title">プライバシー懸念</p>
+          <p class="risk-desc">「個人情報をAIに読ませる」行為への懸念。ただし静的アプリでデータがサーバーに送られない設計は逆に強みになる。「ローカル完結」の明示的な訴求で吸収可能。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>

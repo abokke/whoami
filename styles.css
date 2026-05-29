@@ -1206,6 +1206,11 @@ button:disabled {
   .score-panel {
     display: none;
   }
+
+  /* [LOW-7] merged from duplicate @media (max-width: 860px) block — dark theme override */
+  .quiz-progress-bar:not([hidden]) {
+    background: rgba(26, 26, 46, 0.94);
+  }
 }
 
 @media (max-width: 520px) {
@@ -1362,10 +1367,4 @@ button:disabled {
   line-height: 1.6;
 }
 
-/* ---- Mobile progress bar dark theme ---- */
-
-@media (max-width: 860px) {
-  .quiz-progress-bar:not([hidden]) {
-    background: rgba(26, 26, 46, 0.94);
-  }
-}
+/* [LOW-7] @media (max-width: 860px) dark theme override merged into the block above */

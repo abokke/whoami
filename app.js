@@ -991,7 +991,8 @@ function renderResult(answers) {
 
   // P1-2: analytics — quiz_completed with score/total
   if (typeof gtag === "function") {
-    gtag("event", "quiz_completed", { score: score, total: total, ratio: Math.round((score / total) * 100) });
+    // [MEDIUM-4] 0-division guard consistent with other functions
+    gtag("event", "quiz_completed", { score: score, total: total, ratio: total === 0 ? 0 : Math.round((score / total) * 100) });
   }
   quizMeta.textContent = currentLang === "en"
     ? `${score}/${total} correct`
@@ -1131,7 +1132,8 @@ function showEmojiPop(className, emoji) {
   el.className = `score-emoji-pop ${className}`;
   el.textContent = emoji;
   el.setAttribute("aria-hidden", "true");
-  document.body.appendChild(el);
+  // [LOW-5] spec: append to resultPanel; fall back to body if panel not found
+  (document.getElementById("resultPanel") ?? document.body).appendChild(el);
   setTimeout(() => el.remove(), 2000);
 }
 
@@ -1563,43 +1565,80 @@ document.querySelector("#retryButton").addEventListener("click", () => {
 quizForm.addEventListener("submit", showResult);
 
 // P0-3: Share result button
-document.querySelector("#shareResultButton").addEventListener("click", async () => {
-  if (!currentQuiz || !lastAnswers) return;
+// [HIGH-1] null guard: button may not be present on all pages
+const shareResultBtn = document.querySelector("#shareResultButton");
+if (shareResultBtn) {
+  shareResultBtn.addEventListener("click", async () => {
+    if (!currentQuiz || !lastAnswers) return;
 
-  const total = currentQuiz.questions.length;
-  const score = lastAnswers.reduce(
-    (sum, a, i) => sum + (a === currentQuiz.questions[i].answerIndex ? 1 : 0), 0
-  );
-  const title = currentQuiz ? t(currentQuiz.title) : "";
-  const text = buildShareText(score, total, title, currentLang);
-  const url = window.location.href;
+    const total = currentQuiz.questions.length;
+    const score = lastAnswers.reduce(
+      (sum, a, i) => sum + (a === currentQuiz.questions[i].answerIndex ? 1 : 0), 0
+    );
+    const title = currentQuiz ? t(currentQuiz.title) : "";
+    const text = buildShareText(score, total, title, currentLang);
 
-  // analytics
-  if (typeof gtag === "function") {
-    gtag("event", "result_share_clicked", {
-      platform: navigator.share ? "native" : "x",
-      score,
-      total,
-      quiz_title: title,
-    });
-  }
+    // analytics
+    if (typeof gtag === "function") {
+      gtag("event", "result_share_clicked", {
+        platform: navigator.share ? "native" : "clipboard",
+        score,
+        total,
+        quiz_title: title,
+      });
+    }
 
-  if (navigator.share) {
-    try {
-      await navigator.share({ text, url });
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        // fallback to X
+    // [LOW-6] Helper: show completion feedback on the button for 2s
+    function showShareFeedback() {
+      const label = i18n[currentLang].shareResultCopied;
+      const original = shareResultBtn.textContent;
+      shareResultBtn.textContent = label;
+      shareResultBtn.disabled = true;
+      setTimeout(() => {
+        shareResultBtn.textContent = original;
+        shareResultBtn.disabled = false;
+      }, 2000);
+    }
+
+    // [HIGH-2] navigator.share: omit url param — buildShareText already includes URL in text
+    // [MEDIUM-3] Fallback chain: native share -> clipboard -> X tweet
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+        showShareFeedback();
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          // native share failed for a non-user-abort reason; fall through to clipboard
+          if (navigator.clipboard?.writeText) {
+            try {
+              await navigator.clipboard.writeText(text);
+              showShareFeedback();
+            } catch (_clipErr) {
+              const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+              window.open(tweetUrl, "_blank", "noopener,noreferrer");
+            }
+          } else {
+            const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+            window.open(tweetUrl, "_blank", "noopener,noreferrer");
+          }
+        }
+      }
+    } else if (navigator.clipboard?.writeText) {
+      // [MEDIUM-3] clipboard fallback when native share unavailable
+      try {
+        await navigator.clipboard.writeText(text);
+        showShareFeedback();
+      } catch (_clipErr) {
         const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
         window.open(tweetUrl, "_blank", "noopener,noreferrer");
       }
+    } else {
+      // final fallback: X tweet
+      const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      window.open(tweetUrl, "_blank", "noopener,noreferrer");
     }
-  } else {
-    // fallback: X tweet
-    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-    window.open(tweetUrl, "_blank", "noopener,noreferrer");
-  }
-});
+  });
+}
 
 // ---- Init ----
 

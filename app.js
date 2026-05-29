@@ -9,7 +9,7 @@ let lastAnswers = null;
 
 const i18n = {
   en: {
-    appSubtitle: "A quiz about the real you",
+    appSubtitle: "Bet you can't beat 80%",
     tabBuilder: "Create",
     tabQuiz: "Play",
     stepPrompt: "Prompt",
@@ -57,6 +57,8 @@ const i18n = {
     submitButton: "See Results",
     resetButton: "Reset",
     retryButton: "Try Again",
+    shareResult: "Share result",
+    shareResultCopied: "Share text copied.",
     helpStep1: "① Enter personal info about the person",
     helpStep2: "② Click \"Make Prompt\"",
     helpStep3: "③ Paste prompt into ChatGPT / Claude → copy the JSON output",
@@ -98,15 +100,15 @@ const i18n = {
       quizCleared: "Quiz cleared."
     },
     resultMessages: {
-      perfect: { title: "Perfect!", message: "Are you a stalker?!" },
-      great:   { title: "You really know them", message: "You're practically their shadow." },
-      good:    { title: "Solid friend level", message: "You know the highlights." },
-      growing: { title: "Room to grow", message: "You've scratched the surface." },
-      stranger:{ title: "Nice to meet you level", message: "Good news — now you can start!" }
+      perfect: { title: "Perfect! 👀", message: "Are you a stalker?!" },
+      great:   { title: "You really know them 🎯", message: "You're practically their shadow." },
+      good:    { title: "Solid friend level 📊", message: "You know the highlights." },
+      growing: { title: "Room to grow 😬", message: "You've scratched the surface." },
+      stranger:{ title: "Nice to meet you 💀", message: "Good news — now you can start!" }
     }
   },
   ja: {
-    appSubtitle: "その人らしさを当てるクイズ",
+    appSubtitle: "その人のこと、本当に分かってる？",
     tabBuilder: "作問",
     tabQuiz: "回答",
     stepPrompt: "プロンプト",
@@ -154,6 +156,8 @@ const i18n = {
     submitButton: "結果を見る",
     resetButton: "リセット",
     retryButton: "もう一度",
+    shareResult: "結果をシェア",
+    shareResultCopied: "シェアテキストをコピーしました。",
     helpStep1: "① 本人の情報を入力する",
     helpStep2: "② 「プロンプト作成」をクリック",
     helpStep3: "③ ChatGPT / Claude にプロンプトを貼る → JSON出力をコピー",
@@ -195,11 +199,11 @@ const i18n = {
       quizCleared: "クイズを消去しました。"
     },
     resultMessages: {
-      perfect: { title: "完璧！あなたはストーカーですか？", message: "全問正解です。本人の口ぐせや行動パターンまでかなり把握しています。" },
-      great:   { title: "かなり分かってる", message: "近い距離で見ている人の正解率です。あと少しで本人公認レベル。" },
-      good:    { title: "友人として順調", message: "知っている部分と意外な部分が混ざっています。次に会ったら答え合わせできます。" },
-      growing: { title: "まだ伸びしろあり", message: "第一印象や雰囲気だけでは難しい問題が多かったようです。" },
-      stranger:{ title: "はじめまして級", message: "ここから知っていけば大丈夫です。まずは好きなものから聞いてみましょう。" }
+      perfect: { title: "完璧！ 👀 ストーカー？", message: "全問正解です。本人の口ぐせや行動パターンまでかなり把握しています。" },
+      great:   { title: "かなり分かってる 🎯", message: "近い距離で見ている人の正解率です。あと少しで本人公認レベル。" },
+      good:    { title: "友人として順調 📊", message: "知っている部分と意外な部分が混ざっています。次に会ったら答え合わせできます。" },
+      growing: { title: "まだ伸びしろあり 😬", message: "第一印象や雰囲気だけでは難しい問題が多かったようです。" },
+      stranger:{ title: "はじめまして級 💀", message: "ここから知っていけば大丈夫です。まずは好きなものから聞いてみましょう。" }
     }
   }
 };
@@ -644,6 +648,19 @@ function normalizeBilingualString(field, label) {
   throw new Error(`${label} の形式が正しくありません。`);
 }
 
+function normalizeResultMessages(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const keys = ["perfect", "great", "good", "low", "zero"];
+  const result = {};
+  keys.forEach((key) => {
+    const val = raw[key];
+    if (typeof val === "string" && val.trim()) {
+      result[key] = val.trim();
+    }
+  });
+  return Object.keys(result).length > 0 ? result : null;
+}
+
 function normalizeQuiz(rawQuiz) {
   if (!rawQuiz || typeof rawQuiz !== "object") {
     throw new Error("JSONの形式が正しくありません。");
@@ -683,7 +700,8 @@ function normalizeQuiz(rawQuiz) {
     return { question, choices, answerIndex, explanation };
   });
 
-  return { title, questions };
+  const resultMessages = normalizeResultMessages(rawQuiz.resultMessages);
+  return { title, questions, ...(resultMessages ? { resultMessages } : {}) };
 }
 
 // ---- Storage ----
@@ -811,6 +829,8 @@ function renderQuizEditor(quiz) {
     card.append(header, questionLabel, choicesGroup, explanationLabel);
     questionEditorStack.append(card);
   });
+
+  renderResultMessageEditor(quiz);
 }
 
 // ---- Render quiz ----
@@ -915,14 +935,32 @@ function renderQuiz(quiz) {
 
 // ---- Result ----
 
-function getResultMessage(score, total) {
+function getResultMessageKey(score, total) {
   const ratio = total === 0 ? 0 : score / total;
-  const msgs = i18n[currentLang].resultMessages;
-  if (ratio === 1)    return msgs.perfect;
-  if (ratio >= 0.75)  return msgs.great;
-  if (ratio >= 0.45)  return msgs.good;
-  if (ratio > 0)      return msgs.growing;
-  return msgs.stranger;
+  if (ratio === 1)   return "perfect";
+  if (ratio >= 0.75) return "great";
+  if (ratio >= 0.45) return "good";
+  if (ratio > 0)     return "low";
+  return "zero";
+}
+
+// Map resultMessages keys (perfect/great/good/low/zero) to i18n keys (perfect/great/good/growing/stranger)
+const resultMessagesI18nKeyMap = {
+  perfect: "perfect",
+  great:   "great",
+  good:    "good",
+  low:     "growing",
+  zero:    "stranger",
+};
+
+function getResultMessage(score, total) {
+  const key = getResultMessageKey(score, total);
+  // Check for custom message (single-language text from quiz creator)
+  if (currentQuiz && currentQuiz.resultMessages && currentQuiz.resultMessages[key]) {
+    return { title: null, message: currentQuiz.resultMessages[key] };
+  }
+  const i18nKey = resultMessagesI18nKeyMap[key];
+  return i18n[currentLang].resultMessages[i18nKey];
 }
 
 function getResultTone(score, total) {
@@ -945,11 +983,16 @@ function renderResult(answers) {
   resultPanel.classList.add(`is-${tone}`);
   if (score === total) resultPanel.classList.add("is-perfect");
 
-  resultTitle.textContent = result.title;
+  resultTitle.textContent = result.title ?? "";
   const scoreLabel = currentLang === "en"
     ? `${score}/${total} correct.`
     : `${score}/${total}問正解。`;
   resultMessage.textContent = `${scoreLabel} ${result.message}`;
+
+  // P1-2: analytics — quiz_completed with score/total
+  if (typeof gtag === "function") {
+    gtag("event", "quiz_completed", { score: score, total: total, ratio: Math.round((score / total) * 100) });
+  }
   quizMeta.textContent = currentLang === "en"
     ? `${score}/${total} correct`
     : `${score}/${total}問正解`;
@@ -1027,6 +1070,179 @@ function showResult(event) {
   quizForm.hidden = true;
   resultPanel.hidden = false;
   resultTitle.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  // P0-2: score animation
+  const total = currentQuiz.questions.length;
+  const score = answers.reduce((sum, a, i) => sum + (a === currentQuiz.questions[i].answerIndex ? 1 : 0), 0);
+  triggerScoreAnimation(score, total);
+}
+
+// ---- P0-2: Score animation ----
+
+function triggerScoreAnimation(score, total) {
+  const ratio = total === 0 ? 0 : score / total;
+
+  if (ratio === 1) {
+    // 5/5: full confetti
+    if (typeof confetti === "function") {
+      try {
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      } catch (e) {
+        console.warn("confetti failed", e);
+      }
+    }
+    return;
+  }
+
+  if (ratio >= 0.75) {
+    // 4/5: star confetti
+    if (typeof confetti === "function") {
+      try {
+        confetti({
+          particleCount: 40,
+          spread: 50,
+          shapes: ["star"],
+          colors: ["#FFD700", "#FFA500", "#FFFFFF"],
+          origin: { y: 0.6 },
+        });
+      } catch (e) {
+        console.warn("confetti failed", e);
+      }
+    }
+    return;
+  }
+
+  if (ratio >= 0.45) {
+    showEmojiPop("applause-anim", "👏");
+    return;
+  }
+
+  if (ratio > 0) {
+    showEmojiPop("awkward-anim", "😬");
+    return;
+  }
+
+  // 0/5
+  showEmojiPop("skull-anim", "💀");
+}
+
+function showEmojiPop(className, emoji) {
+  const el = document.createElement("div");
+  el.className = `score-emoji-pop ${className}`;
+  el.textContent = emoji;
+  el.setAttribute("aria-hidden", "true");
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+
+// ---- P0-3: Share ----
+
+function buildShareText(score, total, quizTitle, lang) {
+  const url = window.location.href;
+  const ratio = total === 0 ? 0 : score / total;
+  const title = quizTitle || (lang === "ja" ? "このクイズ" : "this quiz");
+
+  if (lang === "ja") {
+    if (score === total) {
+      return `${title}のクイズで全問正解しました！本人より詳しいかも #WhoamiQuiz\n${url}`;
+    } else if (ratio >= 0.6) {
+      return `${title}のクイズで${score}/${total}問正解。かなり分かってる気がしてたのに #WhoamiQuiz\n${url}`;
+    } else if (ratio > 0) {
+      return `${title}のクイズで${score}/${total}問しか正解できませんでした。全然知らなかった #WhoamiQuiz\n${url}`;
+    } else {
+      return `${title}のクイズで0問正解。ほぼ初対面でした #WhoamiQuiz\n${url}`;
+    }
+  } else {
+    if (score === total) {
+      return `I got a perfect score on ${title}'s Whoami Quiz! I know them too well 👀 #WhoamiQuiz\n${url}`;
+    } else if (ratio >= 0.6) {
+      return `I scored ${score}/${total} on ${title}'s Whoami Quiz. Thought I knew them better! #WhoamiQuiz\n${url}`;
+    } else if (ratio > 0) {
+      return `Only ${score}/${total} on ${title}'s Whoami Quiz. Clearly I don't know them as well as I thought #WhoamiQuiz\n${url}`;
+    } else {
+      return `0/${total} on ${title}'s Whoami Quiz. Basically strangers apparently #WhoamiQuiz\n${url}`;
+    }
+  }
+}
+
+// ---- P0-1: Result message editor ----
+
+function renderResultMessageEditor(quiz) {
+  const container = document.getElementById("resultMessageEditorContainer");
+  if (!container) return;
+
+  const keys = ["perfect", "great", "good", "low", "zero"];
+  const labels = {
+    en: {
+      perfect: "5/5 — Perfect score",
+      great:   "4/5 — Great score",
+      good:    "3/5 — Good score",
+      low:     "1–2/5 — Low score",
+      zero:    "0/5 — Zero score",
+    },
+    ja: {
+      perfect: "5/5 — 全問正解",
+      great:   "4/5 — 惜しい",
+      good:    "3/5 — まあまあ",
+      low:     "1〜2/5 — 残念",
+      zero:    "0/5 — ゼロ",
+    },
+  };
+  const defaults = i18n[currentLang].resultMessages;
+  const defaultTexts = {
+    perfect: defaults.perfect.message,
+    great:   defaults.great.message,
+    good:    defaults.good.message,
+    low:     defaults.growing.message,
+    zero:    defaults.stranger.message,
+  };
+
+  container.innerHTML = "";
+
+  const section = document.createElement("div");
+  section.className = "result-message-editor";
+
+  const heading = document.createElement("h3");
+  heading.className = "editor-heading-sub";
+  heading.textContent = currentLang === "en" ? "Result messages (optional)" : "結果メッセージ（オプション）";
+  section.appendChild(heading);
+
+  const note = document.createElement("p");
+  note.className = "editor-note";
+  note.textContent = currentLang === "en"
+    ? "Write a custom message for each score. Leave blank to use the default."
+    : "スコアごとにカスタムメッセージを入力できます。空欄ならデフォルトが表示されます。";
+  section.appendChild(note);
+
+  keys.forEach((key) => {
+    const label = document.createElement("label");
+    label.className = "editor-field";
+
+    const caption = document.createElement("span");
+    caption.textContent = labels[currentLang][key];
+
+    const textarea = document.createElement("textarea");
+    textarea.rows = 2;
+    textarea.placeholder = defaultTexts[key];
+    textarea.value = quiz.resultMessages?.[key] ?? "";
+    textarea.addEventListener("input", () => {
+      if (!currentQuiz.resultMessages) currentQuiz.resultMessages = {};
+      if (textarea.value.trim()) {
+        currentQuiz.resultMessages[key] = textarea.value.trim();
+      } else {
+        delete currentQuiz.resultMessages[key];
+        if (Object.keys(currentQuiz.resultMessages).length === 0) {
+          delete currentQuiz.resultMessages;
+        }
+      }
+      syncEditedQuiz();
+    });
+
+    label.append(caption, textarea);
+    section.appendChild(label);
+  });
+
+  container.appendChild(section);
 }
 
 // ---- Analytics ----
@@ -1345,6 +1561,45 @@ document.querySelector("#retryButton").addEventListener("click", () => {
 });
 
 quizForm.addEventListener("submit", showResult);
+
+// P0-3: Share result button
+document.querySelector("#shareResultButton").addEventListener("click", async () => {
+  if (!currentQuiz || !lastAnswers) return;
+
+  const total = currentQuiz.questions.length;
+  const score = lastAnswers.reduce(
+    (sum, a, i) => sum + (a === currentQuiz.questions[i].answerIndex ? 1 : 0), 0
+  );
+  const title = currentQuiz ? t(currentQuiz.title) : "";
+  const text = buildShareText(score, total, title, currentLang);
+  const url = window.location.href;
+
+  // analytics
+  if (typeof gtag === "function") {
+    gtag("event", "result_share_clicked", {
+      platform: navigator.share ? "native" : "x",
+      score,
+      total,
+      quiz_title: title,
+    });
+  }
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ text, url });
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        // fallback to X
+        const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+        window.open(tweetUrl, "_blank", "noopener,noreferrer");
+      }
+    }
+  } else {
+    // fallback: X tweet
+    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(tweetUrl, "_blank", "noopener,noreferrer");
+  }
+});
 
 // ---- Init ----
 

@@ -3,16 +3,31 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Whoami Quiz</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f8b8d'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-size='26' font-family='Arial' font-weight='700' fill='white'%3EW%3C/text%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="styles.css?v=ai-buttons-1" />
+    <title>Whoami Quiz — Do you really know them?</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2300d4b8'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-size='26' font-family='Arial' font-weight='700' fill='white'%3EW%3C/text%3E%3C/svg%3E" />
+
+    <!-- OGP -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Whoami Quiz — Do you really know them?" />
+    <meta property="og:description" content="A 5-question quiz generated from someone's real personality data. How well do you know this person?" />
+    <meta property="og:image" content="https://whoami-quiz.vercel.app/ogp.png" />
+    <meta property="og:url" content="https://whoami-quiz.vercel.app/" />
+    <meta property="og:site_name" content="Whoami Quiz" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Whoami Quiz — Do you really know them?" />
+    <meta name="twitter:description" content="A 5-question quiz generated from someone's real personality data. How well do you know this person?" />
+    <meta name="twitter:image" content="https://whoami-quiz.vercel.app/ogp.png" />
+
+    <link rel="stylesheet" href="styles.css?v=p0-features-1" />
   </head>
   <body>
     <main class="app-shell">
       <header class="topbar">
         <div>
           <p class="eyebrow">Whoami Quiz</p>
-          <h1 data-i18n="appSubtitle">A quiz about the real you</h1>
+          <h1 data-i18n="appSubtitle">Bet you can't beat 80%</h1>
         </div>
         <div class="topbar-controls">
           <button class="lang-toggle" type="button" id="langToggle">日本語</button>
@@ -132,6 +147,7 @@
                   <input id="quizTitleEditor" type="text" />
                 </label>
                 <div class="editor-question-stack" id="questionEditorStack"></div>
+                <div id="resultMessageEditorContainer"></div>
               </section>
             </details>
             <div class="action-row">
@@ -212,6 +228,7 @@
               <div class="result-detail" id="resultDetail"></div>
               <div class="action-row">
                 <button class="primary-button" type="button" id="retryButton" data-i18n="retryButton">Try Again</button>
+                <button class="primary-button share-result-btn" type="button" id="shareResultButton" data-i18n="shareResult">Share result</button>
                 <button class="ghost-button" type="button" data-tab-jump="builder" data-i18n="goCreate">Create a quiz</button>
               </div>
             </section>
@@ -233,6 +250,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-    <script src="app.js?v=ai-buttons-1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="app.js?v=p0-features-1"></script>
   </body>
 </html>

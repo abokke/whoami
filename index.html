@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Whoami Quiz</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f8b8d'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-size='26' font-family='Arial' font-weight='700' fill='white'%3EW%3C/text%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="styles.css?v=inline-quiz-editor-9" />
+    <link rel="stylesheet" href="styles.css?v=ai-buttons-1" />
   </head>
   <body>
     <main class="app-shell">
@@ -71,6 +71,15 @@
                 </div>
                 <p class="panel-note" data-i18n="promptStepNote">Copy this prompt to an external AI, then bring the JSON result back here.</p>
                 <textarea id="promptOutput" spellcheck="false" readonly></textarea>
+                <div class="ai-buttons" id="aiButtons" role="group" aria-label="Open in AI" data-i18n-aria-label="aiButtonsLabel">
+                  <button class="ai-button" type="button" id="openChatGptButton" data-ai-provider="chatgpt"><span data-i18n="openChatGpt">Open in ChatGPT</span></button>
+                  <button class="ai-button" type="button" id="openClaudeButton" data-ai-provider="claude"><span data-i18n="openClaude">Open in Claude</span></button>
+                  <button class="ai-button" type="button" id="openGeminiButton" data-ai-provider="gemini"><span data-i18n="openGemini">Open in Gemini</span></button>
+                  <button class="ai-button ai-button--copy" type="button" id="copyPromptOnlyButton" data-ai-provider="copy_only" aria-label="Copy prompt">
+                    <span aria-hidden="true">📋</span>
+                    <span data-i18n="copyPromptOnly">Copy</span>
+                  </button>
+                </div>
                 <div class="action-row">
                   <button class="ghost-button" type="button" id="goJsonButton" data-i18n="goJsonStep">Paste generated JSON</button>
                 </div>
@@ -224,6 +233,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-    <script src="app.js?v=inline-quiz-editor-9"></script>
+    <script src="app.js?v=ai-buttons-1"></script>
   </body>
 </html>

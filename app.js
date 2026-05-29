@@ -75,6 +75,13 @@ const i18n = {
     selectedAnswer: "Selected answer",
     changeAnswer: "Change",
     unansweredError: "Choose one answer.",
+    aiButtonsLabel: "Open in AI",
+    openChatGpt: "Open in ChatGPT",
+    openClaude: "Open in Claude",
+    openGemini: "Open in Gemini",
+    copyPromptOnly: "Copy",
+    copiedFeedback: "Copied!",
+    copyFailedFeedback: "Copy manually",
     statusMessages: {
       sharedLoaded: "Shared quiz loaded.",
       sharedLoadError: "Could not load the shared quiz link.",
@@ -165,6 +172,13 @@ const i18n = {
     selectedAnswer: "選択した回答",
     changeAnswer: "変更",
     unansweredError: "回答を1つ選んでください。",
+    aiButtonsLabel: "AIで開く",
+    openChatGpt: "ChatGPT で開く",
+    openClaude: "Claude で開く",
+    openGemini: "Gemini で開く",
+    copyPromptOnly: "コピー",
+    copiedFeedback: "コピーしました！",
+    copyFailedFeedback: "手動でコピーしてください",
     statusMessages: {
       sharedLoaded: "共有されたクイズを読み込みました。",
       sharedLoadError: "共有リンクのクイズを読み込めませんでした。",
@@ -455,7 +469,18 @@ function applyLang() {
 
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.dataset.i18n;
-    if (L[key] !== undefined) el.textContent = L[key];
+    if (L[key] !== undefined) {
+      // Skip elements whose button ancestor is showing transient "is-copied" feedback;
+      // the setTimeout in handleAiButtonClick will restore the correct text when it fires.
+      const btnAncestor = el.closest("[data-ai-provider]");
+      if (btnAncestor && btnAncestor.classList.contains("is-copied")) return;
+      el.textContent = L[key];
+    }
+  });
+
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
+    const key = el.dataset.i18nAriaLabel;
+    if (L[key] !== undefined) el.setAttribute("aria-label", L[key]);
   });
 
   profileInput.placeholder = L.profilePlaceholder;
@@ -1004,7 +1029,88 @@ function showResult(event) {
   resultTitle.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+// ---- Analytics ----
+
+function trackAiButtonClick(provider) {
+  if (typeof gtag === "function") {
+    gtag("event", "ai_button_click", { ai_provider: provider });
+  } else {
+    console.log("[analytics] ai_button_click", { ai_provider: provider });
+  }
+}
+
+// ---- AI buttons ----
+
+const AI_URLS = {
+  chatgpt: "https://chatgpt.com/",
+  claude: "https://claude.ai/new",
+  gemini: "https://gemini.google.com/app",
+};
+
+async function handleAiButtonClick(provider) {
+  const prompt = promptOutput.value.trim();
+  if (!prompt) {
+    setStatus(statusText("promptMissing"), true);
+    return;
+  }
+
+  const btn = document.querySelector(`[data-ai-provider="${provider}"]`);
+  if (!btn) return;
+  // Target the translatable span if present (a11y structure), otherwise the button itself.
+  const labelEl = btn.querySelector("[data-i18n]") ?? btn;
+  const originalText = labelEl.textContent;
+  const L = i18n[currentLang];
+
+  async function attemptCopy() {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(prompt);
+      return true;
+    }
+    // Graceful degradation: execCommand fallback.
+    // NOTE: This is called inside an async function, so the user-gesture context
+    // is typically lost by the time execCommand runs. Most modern browsers will
+    // silently fail or throw here. The try/catch in the caller handles that case
+    // by showing a "copy manually" message rather than crashing.
+    const ta = document.createElement("textarea");
+    ta.value = prompt;
+    ta.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    if (!ok) throw new Error("execCommand failed");
+    return true;
+  }
+
+  let copied = false;
+  try {
+    await attemptCopy();
+    copied = true;
+  } catch {
+    // copy failed — show degradation message, still open the URL
+  }
+
+  trackAiButtonClick(provider);
+
+  if (provider !== "copy_only" && AI_URLS[provider]) {
+    window.open(AI_URLS[provider], "_blank", "noopener,noreferrer");
+  }
+
+  const feedback = copied ? L.copiedFeedback : L.copyFailedFeedback;
+  labelEl.textContent = feedback;
+  btn.classList.add("is-copied");
+  setTimeout(() => {
+    labelEl.textContent = originalText;
+    btn.classList.remove("is-copied");
+  }, 2000);
+}
+
 // ---- Event listeners ----
+
+document.querySelectorAll("[data-ai-provider]").forEach((btn) => {
+  btn.addEventListener("click", () => handleAiButtonClick(btn.dataset.aiProvider));
+});
 
 langToggle.addEventListener("click", () => {
   currentLang = currentLang === "en" ? "ja" : "en";

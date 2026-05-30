@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Whoami Quiz — あなたのことを、どれだけ知ってる？</title>
+  <title>QuizGen — あなたのことを、どれだけ知ってる？</title>
   <meta name="description" content="自分のことをAIに読ませて、5問クイズを作ろう。友人に共有して、本当に分かってくれてる人を見つけよう。" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -815,8 +815,11 @@
 
   <!-- NAV -->
   <nav class="nav">
-    <a href="index.html" class="nav-logo">WHOAMI</a>
-    <a href="index.html" class="nav-cta">クイズを作る →</a>
+    <a href="index.html" class="nav-logo">QUIZGEN</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="lang-toggle" type="button" id="lpLangToggle" style="padding:6px 14px;border:1px solid var(--teal);border-radius:4px;background:transparent;color:var(--teal);font-family:'Unbounded',sans-serif;font-weight:700;font-size:0.68rem;letter-spacing:0.06em;cursor:pointer;transition:background 0.2s,color 0.2s;" onmouseover="this.style.background='var(--teal)';this.style.color='var(--bg)'" onmouseout="this.style.background='transparent';this.style.color='var(--teal)'">EN</button>
+      <a href="index.html" class="nav-cta" data-i18n-lp="navCta">クイズを作る →</a>
+    </div>
   </nav>
 
   <!-- HERO -->
@@ -827,28 +830,28 @@
     </div>
     <div class="hero-inner">
       <div class="hero-eyebrow">AI-Powered Personal Quiz</div>
-      <h1 class="hero-headline">
+      <h1 class="hero-headline" id="heroHeadline">
         あなたのことを、<br />
         <em>どれだけ</em><br />
         <span class="line-gold">知ってる？</span>
       </h1>
-      <p class="hero-sub">
+      <p class="hero-sub" data-i18n-lp="heroSub">
         自分のパーソナル情報をAIに読ませ、5問クイズを自動生成。<br />
         友人にシェアして、本当に分かり合えてるか確かめよう。
       </p>
       <div class="hero-actions">
-        <a href="index.html" class="btn-primary">
+        <a href="index.html" class="btn-primary" data-i18n-lp="heroCta">
           Bet you can't beat 80% — 今すぐ試す
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
-        <a href="#how" class="btn-ghost">使い方を見る</a>
+        <a href="#how" class="btn-ghost" data-i18n-lp="heroHowTo">使い方を見る</a>
       </div>
 
       <!-- ウェイトリスト（Tally.so embed） -->
       <div id="waitlist" style="margin-top: 2rem;">
         <iframe data-tally-src="https://tally.so/embed/wgz2oR?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
           loading="lazy" width="100%" height="200" frameborder="0"
-          marginheight="0" marginwidth="0" title="Join the waitlist"></iframe>
+          marginheight="0" marginwidth="0" title="QuizGen ウェイトリスト"></iframe>
       </div>
       <script>var d=document,w="https://tally.so/widgets/embed.js",v=function(){"undefined"!=typeof Tally?Tally.loadEmbeds():d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((function(e){e.src=e.dataset.tallySrc}))};if("undefined"!=typeof Tally)v();else if(d.querySelector('script[src="'+w+'"]')==null){var s=d.createElement("script");s.src=w;s.onload=v;s.onerror=v;d.body.appendChild(s);}</script>
       <div class="hero-stat-row">
@@ -961,7 +964,7 @@
             シンプルに作って、シンプルにシェアする。
             それだけで十分に楽しい。
           </p>
-          <a href="index.html" class="btn-primary" style="display:inline-flex; margin-top:36px">
+          <a href="index.html" class="btn-primary" style="display:inline-flex; margin-top:36px" data-i18n-lp="featureCta">
             今すぐ試す →
           </a>
         </div>
@@ -1061,11 +1064,11 @@
         </p>
       </div>
       <div class="cta-action reveal" style="transition-delay:0.15s">
-        <a href="index.html" class="btn-primary">
+        <a href="index.html" class="btn-primary" data-i18n-lp="ctaButton">
           クイズを作る
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
-        <span class="cta-note">No sign-up required</span>
+        <span class="cta-note" data-i18n-lp="ctaNote">No sign-up required</span>
       </div>
     </div>
   </section>
@@ -1073,7 +1076,7 @@
   <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-inner">
-      <a href="index.html" class="footer-logo">WHOAMI QUIZ</a>
+      <a href="index.html" class="footer-logo">QUIZGEN</a>
       <span class="footer-copy">Built with AI. Made for friends.</span>
     </div>
   </footer>
@@ -1093,6 +1096,69 @@
       { threshold: 0.12 }
     );
     reveals.forEach((el) => observer.observe(el));
+  </script>
+
+  <script>
+    // LP i18n
+    const LP_LANG_KEY = "quizgen.lang.v1";
+
+    const lpI18n = {
+      ja: {
+        htmlLang: "ja",
+        title: "QuizGen — あなたのことを、どれだけ知ってる？",
+        langToggle: "EN",
+        navCta: "クイズを作る →",
+        heroHeadline: "あなたのことを、<br /><em>どれだけ</em><br /><span class=\"line-gold\">知ってる？</span>",
+        heroSub: "自分のパーソナル情報をAIに読ませ、5問クイズを自動生成。<br />友人にシェアして、本当に分かり合えてるか確かめよう。",
+        heroCta: "Bet you can't beat 80% — 今すぐ試す<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"M3 8h10M9 4l4 4-4 4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
+        heroHowTo: "使い方を見る",
+        featureCta: "今すぐ試す →",
+        ctaButton: "クイズを作る<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"M3 8h10M9 4l4 4-4 4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
+        ctaNote: "No sign-up required",
+      },
+      en: {
+        htmlLang: "en",
+        title: "QuizGen — How well do your friends really know you?",
+        langToggle: "日本語",
+        navCta: "Create a quiz →",
+        heroHeadline: "How well do your<br /><em>friends</em><br /><span class=\"line-gold\">really know you?</span>",
+        heroSub: "Let AI turn your personality into a 5-question quiz.<br />Share it and see who actually knows you.",
+        heroCta: "Try it now<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"M3 8h10M9 4l4 4-4 4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
+        heroHowTo: "See how it works",
+        featureCta: "Try it now →",
+        ctaButton: "Create a quiz<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"M3 8h10M9 4l4 4-4 4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
+        ctaNote: "No sign-up required",
+      },
+    };
+
+    let lpLang = localStorage.getItem(LP_LANG_KEY) ?? "ja";
+
+    function applyLpLang() {
+      const L = lpI18n[lpLang];
+      document.documentElement.lang = L.htmlLang;
+      document.title = L.title;
+
+      const toggle = document.getElementById("lpLangToggle");
+      if (toggle) toggle.textContent = L.langToggle;
+
+      // heroHeadline uses innerHTML (contains em/span markup)
+      const heroHeadline = document.getElementById("heroHeadline");
+      if (heroHeadline) heroHeadline.innerHTML = L.heroHeadline;
+
+      document.querySelectorAll("[data-i18n-lp]").forEach((el) => {
+        const key = el.dataset.i18nLp;
+        if (L[key] !== undefined) el.innerHTML = L[key];
+      });
+
+      localStorage.setItem(LP_LANG_KEY, lpLang);
+    }
+
+    document.getElementById("lpLangToggle").addEventListener("click", () => {
+      lpLang = lpLang === "ja" ? "en" : "ja";
+      applyLpLang();
+    });
+
+    applyLpLang();
   </script>
 </body>
 </html>

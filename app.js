@@ -1,5 +1,5 @@
-const STORAGE_KEY = "whoami.quiz.v1";
-const LANG_KEY = "whoami.lang.v1";
+const STORAGE_KEY = "quizgen.quiz.v1";
+const LANG_KEY = "quizgen.lang.v1";
 
 let currentQuiz = null;
 let currentLang = localStorage.getItem(LANG_KEY) ?? "en";
@@ -1208,23 +1208,23 @@ function buildShareText(score, total, quizTitle, lang) {
 
   if (lang === "ja") {
     if (score === total) {
-      return `${title}のクイズで全問正解しました！本人より詳しいかも #WhoamiQuiz\n${url}`;
+      return `${title}のクイズで全問正解しました！本人より詳しいかも #QuizGen\n${url}`;
     } else if (ratio >= 0.6) {
-      return `${title}のクイズで${score}/${total}問正解。かなり分かってる気がしてたのに #WhoamiQuiz\n${url}`;
+      return `${title}のクイズで${score}/${total}問正解。かなり分かってる気がしてたのに #QuizGen\n${url}`;
     } else if (ratio > 0) {
-      return `${title}のクイズで${score}/${total}問しか正解できませんでした。全然知らなかった #WhoamiQuiz\n${url}`;
+      return `${title}のクイズで${score}/${total}問しか正解できませんでした。全然知らなかった #QuizGen\n${url}`;
     } else {
-      return `${title}のクイズで0問正解。ほぼ初対面でした #WhoamiQuiz\n${url}`;
+      return `${title}のクイズで0問正解。ほぼ初対面でした #QuizGen\n${url}`;
     }
   } else {
     if (score === total) {
-      return `I got a perfect score on ${title}'s Whoami Quiz! I know them too well 👀 #WhoamiQuiz\n${url}`;
+      return `I got a perfect score on ${title}'s QuizGen! I know them too well 👀 #QuizGen\n${url}`;
     } else if (ratio >= 0.6) {
-      return `I scored ${score}/${total} on ${title}'s Whoami Quiz. Thought I knew them better! #WhoamiQuiz\n${url}`;
+      return `I scored ${score}/${total} on ${title}'s QuizGen. Thought I knew them better! #QuizGen\n${url}`;
     } else if (ratio > 0) {
-      return `Only ${score}/${total} on ${title}'s Whoami Quiz. Clearly I don't know them as well as I thought #WhoamiQuiz\n${url}`;
+      return `Only ${score}/${total} on ${title}'s QuizGen. Clearly I don't know them as well as I thought #QuizGen\n${url}`;
     } else {
-      return `0/${total} on ${title}'s Whoami Quiz. Basically strangers apparently #WhoamiQuiz\n${url}`;
+      return `0/${total} on ${title}'s QuizGen. Basically strangers apparently #QuizGen\n${url}`;
     }
   }
 }
@@ -1533,7 +1533,7 @@ document.querySelector("#downloadQuizButton").addEventListener("click", () => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "whoami-quiz.json";
+  link.download = "quizgen-quiz.json";
   link.click();
   URL.revokeObjectURL(url);
   setStatus(statusText("exportDone"));

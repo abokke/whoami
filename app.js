@@ -84,6 +84,8 @@ const i18n = {
     copyPromptOnly: "Copy",
     copiedFeedback: "Copied!",
     copyFailedFeedback: "Copy manually",
+    generateAi: "Generate with AI",
+    generateAiLoading: "Generating…",
     statusMessages: {
       sharedLoaded: "Shared quiz loaded.",
       sharedLoadError: "Could not load the shared quiz link.",
@@ -97,7 +99,8 @@ const i18n = {
       importError: "Could not load the quiz JSON.",
       exportMissing: "There is no quiz JSON to export.",
       exportDone: "Quiz JSON exported.",
-      quizCleared: "Quiz cleared."
+      quizCleared: "Quiz cleared.",
+      generateAiError: "Generation failed. Try again."
     },
     resultMessages: {
       perfect: { title: "Perfect! 👀", message: "Are you a stalker?!" },
@@ -183,6 +186,8 @@ const i18n = {
     copyPromptOnly: "コピー",
     copiedFeedback: "コピーしました！",
     copyFailedFeedback: "手動でコピーしてください",
+    generateAi: "AIで生成",
+    generateAiLoading: "生成中…",
     statusMessages: {
       sharedLoaded: "共有されたクイズを読み込みました。",
       sharedLoadError: "共有リンクのクイズを読み込めませんでした。",
@@ -196,7 +201,8 @@ const i18n = {
       importError: "設問JSONを読み込めません。",
       exportMissing: "書き出す設問JSONがありません。",
       exportDone: "設問JSONを書き出しました。",
-      quizCleared: "クイズを消去しました。"
+      quizCleared: "クイズを消去しました。",
+      generateAiError: "生成に失敗しました。もう一度試してください。"
     },
     resultMessages: {
       perfect: { title: "完璧！ 👀 ストーカー？", message: "全問正解です。本人の口ぐせや行動パターンまでかなり把握しています。" },
@@ -550,6 +556,49 @@ Person memo:
 ${profile.trim()}`;
 }
 
+// ---- Analytics (noop until backend wires up real tracking) ----
+
+function trackEvent(name, props = {}) {
+  // intentionally empty — replace with real analytics integration
+}
+
+// ---- AI generation ----
+
+async function handleGenerateAi() {
+  const profile = profileInput.value.trim();
+  if (!profile) {
+    setStatus(statusText("profileRequired"), true);
+    profileInput.focus();
+    return;
+  }
+
+  const btn = document.querySelector("#generateAiButton");
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = i18n[currentLang].generateAiLoading;
+
+  try {
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile }),
+    });
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    const { quiz } = await res.json();
+    const normalized = normalizeQuiz(quiz);
+    saveQuiz(normalized);
+    jsonInput.value = JSON.stringify(normalized, null, 2);
+    renderQuiz(normalized);
+    setTab("quiz");
+    trackEvent("quiz_generated", { method: "api" });
+  } catch {
+    setStatus(statusText("generateAiError"), true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = i18n[currentLang].generateAi;
+  }
+}
+
 // ---- URL share ----
 
 function bytesToBase64Url(bytes) {
@@ -589,6 +638,19 @@ async function decompress(b64) {
 }
 
 async function buildShareUrl(quiz) {
+  try {
+    const res = await fetch("/api/shorten", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quiz }),
+    });
+    if (res.ok) {
+      const { id } = await res.json();
+      return `${location.origin}/q/${id}`;
+    }
+  } catch { /* fall through to hash fallback */ }
+
+  // フォールバック: URL ハッシュ（既存ロジック）
   const json = JSON.stringify(quiz);
   const base = location.href.split("#")[0];
   if (window.CompressionStream && window.DecompressionStream) {
@@ -1357,6 +1419,8 @@ document.querySelector("#makePromptButton").addEventListener("click", () => {
   promptOutput.value = makePrompt(profile);
   setStatus(statusText("promptCreated"));
 });
+
+document.querySelector("#generateAiButton")?.addEventListener("click", handleGenerateAi);
 
 document.querySelector("#goJsonButton").addEventListener("click", () => {
   setBuilderStep(2);

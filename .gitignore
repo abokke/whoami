@@ -2,3 +2,6 @@
 .playwright-mcp/
 .claude/
 .serena/
+node_modules/
+.env.local
+.env.production

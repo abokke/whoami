@@ -41,20 +41,23 @@ quizgen/
 └── .claude/agents/     ← エージェント定義
 ```
 
-## 主要決定（変更禁止）
+## 開発原則
 
-1. フロントエンドは静的 HTML/CSS/JS のまま（フレームワーク導入しない）
-2. `@vercel/kv` は使わない → `@upstash/redis` のみ
-3. Edge Runtime は原則使わない → Node.js runtime + `maxDuration: 30`
-4. Groq 以外の LLM プロバイダーは使わない
-5. 広告は入れない（バイラル・Freemium モデルで収益化）
-6. 月額コスト上限 $20
+**ミニマム実装から進める。** 新機能・新フェーズで技術スタックの変更が必要になったら、必要最低限のライブラリ・フレームワークを選んで導入する。最初から重厚な構成にしない。
+
+## 確定決定（architect 承認済み）
+
+1. `@vercel/kv` は使わない → `@upstash/redis` のみ
+2. Edge Runtime は原則使わない → Node.js runtime + `maxDuration: 30`
+3. Groq 以外の LLM プロバイダーは使わない
+4. 広告は入れない（バイラル・Freemium モデルで収益化）
+5. 月額コスト上限 $20
 
 ## コーディング規約
 
 - コメントは「なぜ」が非自明な場合のみ書く（何をするかは書かない）
 - i18n キーは `en` / `ja` 両対応必須
-- 新規ライブラリ追加は最小限（CDN 経由も要検討）
+- 新規ライブラリ・フレームワークは必要最低限。導入前に architect が評価する
 - `api/` 配下は全て Node.js 形式（`export default function handler(req, res)`）
 
 ## エージェント役割早見表

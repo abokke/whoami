@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuizGen — Product Roadmap 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─────────────────────────────────────────
+       Tokens
+    ───────────────────────────────────────── */
+    :root {
+      --bg:       #07070f;
+      --bg2:      #0c0c1a;
+      --bg3:      #131325;
+      --bg4:      #1a1a32;
+      --fg:       #e8e8f5;
+      --fg2:      #a0a0c0;
+      --fg3:      #606080;
+      --teal:     #00d4b8;
+      --teal-dim: #00d4b820;
+      --teal-glow:#00d4b840;
+      --coral:    #ff6b6b;
+      --coral-dim:#ff6b6b20;
+      --amber:    #ffc947;
+      --amber-dim:#ffc94720;
+      --border:   rgba(255,255,255,0.06);
+      --border2:  rgba(0,212,184,0.15);
+    }
+
+    /* ─────────────────────────────────────────
+       Reset & Base
+    ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: "Noto Sans JP", sans-serif;
+      font-weight: 400;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ─────────────────────────────────────────
+       Background: grid + noise
+    ───────────────────────────────────────── */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,184,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,184,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* subtle radial glow at top center */
+    body::after {
+      content: "";
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 600px;
+      background: radial-gradient(ellipse at center, rgba(0,212,184,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─────────────────────────────────────────
+       Layout wrapper
+    ───────────────────────────────────────── */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 28px 100px;
+    }
+
+    /* ─────────────────────────────────────────
+       Header
+    ───────────────────────────────────────── */
+    .page-header {
+      margin-bottom: 72px;
+      position: relative;
+    }
+
+    .header-eyebrow {
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.6rem;
+      font-weight: 400;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-eyebrow::before {
+      content: "";
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: var(--teal);
+    }
+
+    .page-title {
+      font-family: "Unbounded", sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+      margin-bottom: 12px;
+    }
+
+    .page-title .accent {
+      color: var(--teal);
+    }
+
+    .page-subtitle {
+      font-family: "Unbounded", sans-serif;
+      font-size: clamp(0.9rem, 2vw, 1.15rem);
+      font-weight: 300;
+      color: var(--fg2);
+      letter-spacing: 0.02em;
+      margin-bottom: 32px;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--fg3);
+      letter-spacing: 0.04em;
+    }
+
+    .meta-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--teal);
+      flex-shrink: 0;
+    }
+
+    /* Header decoration line */
+    .header-line {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 1px;
+      height: 100%;
+      background: linear-gradient(to bottom, var(--teal), transparent);
+      opacity: 0.4;
+    }
+
+    /* ─────────────────────────────────────────
+       Timeline spine
+    ───────────────────────────────────────── */
+    .timeline {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 22px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom,
+        var(--teal) 0%,
+        rgba(0,212,184,0.4) 30%,
+        rgba(255,107,107,0.3) 60%,
+        rgba(255,107,107,0.1) 100%
+      );
+    }
+
+    /* ─────────────────────────────────────────
+       Phase card
+    ───────────────────────────────────────── */
+    .phase {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .phase:nth-child(1) { animation-delay: 0.05s; }
+    .phase:nth-child(2) { animation-delay: 0.15s; }
+    .phase:nth-child(3) { animation-delay: 0.25s; }
+    .phase:nth-child(4) { animation-delay: 0.35s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Timeline node */
+    .phase-node {
+      flex-shrink: 0;
+      position: relative;
+      width: 44px;
+      display: flex;
+      justify-content: center;
+      padding-top: 20px;
+    }
+
+    .phase-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--teal);
+      background: var(--bg);
+      position: relative;
+      z-index: 1;
+    }
+
+    .phase--now .phase-dot {
+      background: var(--teal);
+      box-shadow: 0 0 0 4px var(--teal-dim), 0 0 16px var(--teal-glow);
+    }
+
+    .phase--next .phase-dot {
+      border-color: var(--coral);
+    }
+
+    .phase--future .phase-dot {
+      border-color: var(--fg3);
+    }
+
+    .phase--scale .phase-dot {
+      border-color: var(--fg3);
+      border-style: dashed;
+    }
+
+    /* Card body */
+    .phase-card {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .phase-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--teal), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .phase--now .phase-card {
+      border-color: rgba(0,212,184,0.2);
+      box-shadow: 0 0 32px rgba(0,212,184,0.05), inset 0 0 48px rgba(0,212,184,0.02);
+    }
+
+    .phase--now .phase-card::before {
+      opacity: 1;
+    }
+
+    .phase--next .phase-card::before {
+      background: linear-gradient(90deg, var(--coral), transparent);
+    }
+
+    .phase-card:hover {
+      border-color: rgba(0,212,184,0.25);
+      box-shadow: 0 4px 32px rgba(0,212,184,0.06);
+    }
+
+    .phase--next .phase-card:hover {
+      border-color: rgba(255,107,107,0.25);
+      box-shadow: 0 4px 32px rgba(255,107,107,0.06);
+    }
+
+    /* Card corner accent */
+    .phase-card::after {
+      content: "";
+      position: absolute;
+      top: -1px;
+      right: -1px;
+      width: 48px;
+      height: 48px;
+      border-top: 1px solid transparent;
+      border-right: 1px solid transparent;
+      border-radius: 0 12px 0 0;
+    }
+
+    .phase--now .phase-card::after {
+      border-top-color: var(--teal);
+      border-right-color: var(--teal);
+    }
+
+    /* Phase header row */
+    .phase-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .phase-title-group {}
+
+    .phase-label {
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--fg3);
+      margin-bottom: 6px;
+    }
+
+    .phase-title {
+      font-family: "Unbounded", sans-serif;
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      font-weight: 700;
+      color: var(--fg);
+      line-height: 1.2;
+    }
+
+    /* Status badge */
+    .badge {
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 100px;
+      border: 1px solid;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .badge--now {
+      color: var(--teal);
+      border-color: var(--teal);
+      background: var(--teal-dim);
+    }
+
+    .badge--next {
+      color: var(--coral);
+      border-color: var(--coral);
+      background: var(--coral-dim);
+    }
+
+    .badge--future {
+      color: var(--fg3);
+      border-color: var(--fg3);
+      background: rgba(255,255,255,0.03);
+    }
+
+    /* Goal line */
+    .phase-goal {
+      font-size: 0.82rem;
+      color: var(--fg2);
+      margin-bottom: 24px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.025);
+      border-left: 2px solid var(--teal);
+      border-radius: 0 6px 6px 0;
+      line-height: 1.6;
+    }
+
+    .phase--next .phase-goal { border-left-color: var(--coral); }
+    .phase--future .phase-goal { border-left-color: var(--fg3); }
+    .phase--scale .phase-goal { border-left-color: var(--fg3); }
+
+    .goal-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 4px;
+    }
+
+    .phase--next .goal-label { color: var(--coral); }
+    .phase--future .goal-label { color: var(--fg3); }
+    .phase--scale .goal-label { color: var(--fg3); }
+
+    /* ─────────────────────────────────────────
+       Task list with checkboxes
+    ───────────────────────────────────────── */
+    .task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--fg2);
+      line-height: 1.5;
+      cursor: pointer;
+      border-radius: 6px;
+      padding: 4px 6px;
+      transition: background 0.15s ease;
+    }
+
+    .task-item:hover { background: rgba(255,255,255,0.03); }
+
+    .task-item input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      border: 1.5px solid var(--fg3);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      margin-top: 2px;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .task-item input[type="checkbox"]:checked {
+      border-color: var(--teal);
+      background: var(--teal);
+    }
+
+    .task-item input[type="checkbox"]:checked::after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 0px;
+      width: 5px;
+      height: 9px;
+      border: 2px solid var(--bg);
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .task-item label {
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* Strike through when checked */
+    .task-item input[type="checkbox"]:checked ~ label {
+      color: var(--fg3);
+      text-decoration: line-through;
+      text-decoration-color: var(--fg3);
+    }
+
+    /* ─────────────────────────────────────────
+       Feature list (implemented ✅)
+    ───────────────────────────────────────── */
+    .feature-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      color: var(--fg2);
+      padding: 8px 12px;
+      background: rgba(0,212,184,0.04);
+      border: 1px solid rgba(0,212,184,0.1);
+      border-radius: 6px;
+    }
+
+    .feature-check {
+      color: var(--teal);
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    /* ─────────────────────────────────────────
+       Pricing table
+    ───────────────────────────────────────── */
+    .pricing-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .pricing-table thead {
+      background: rgba(255,107,107,0.08);
+    }
+
+    .pricing-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--coral);
+      border-bottom: 1px solid rgba(255,107,107,0.15);
+    }
+
+    .pricing-table td {
+      padding: 12px 16px;
+      color: var(--fg2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pricing-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .pricing-table tbody tr:hover td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .price-highlight {
+      color: var(--fg);
+      font-weight: 700;
+    }
+
+    .plan-name {
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    /* ─────────────────────────────────────────
+       Future feature bullet list
+    ───────────────────────────────────────── */
+    .bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .bullet-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.84rem;
+      color: var(--fg2);
+    }
+
+    .bullet-item::before {
+      content: "→";
+      color: var(--fg3);
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-size: 0.75rem;
+    }
+
+    /* ─────────────────────────────────────────
+       KPI chip
+    ───────────────────────────────────────── */
+    .kpi-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .kpi-label {
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--fg3);
+    }
+
+    .kpi-chip {
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 100px;
+      letter-spacing: 0.05em;
+    }
+
+    .kpi-chip--teal {
+      color: var(--teal);
+      background: var(--teal-dim);
+    }
+
+    .kpi-chip--coral {
+      color: var(--coral);
+      background: var(--coral-dim);
+    }
+
+    .kpi-chip--amber {
+      color: var(--amber);
+      background: var(--amber-dim);
+    }
+
+    /* ─────────────────────────────────────────
+       Section sub-heading
+    ───────────────────────────────────────── */
+    .section-heading {
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--fg3);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-heading::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ─────────────────────────────────────────
+       Decision Required block
+    ───────────────────────────────────────── */
+    .decision-block {
+      margin-top: 32px;
+      background: rgba(255,201,71,0.04);
+      border: 1px solid rgba(255,201,71,0.2);
+      border-radius: 12px;
+      padding: 28px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .decision-block::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--amber), transparent);
+    }
+
+    .decision-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .decision-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--amber-dim);
+      border: 1px solid rgba(255,201,71,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .decision-title {
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--amber);
+      letter-spacing: 0.02em;
+    }
+
+    .decision-subtitle {
+      font-size: 0.75rem;
+      color: var(--fg3);
+      margin-top: 2px;
+    }
+
+    .decision-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .decision-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.84rem;
+      color: var(--fg2);
+    }
+
+    .decision-item input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      border: 1.5px solid rgba(255,201,71,0.4);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      margin-top: 2px;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .decision-item input[type="checkbox"]:checked {
+      border-color: var(--amber);
+      background: var(--amber);
+    }
+
+    .decision-item input[type="checkbox"]:checked::after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 0px;
+      width: 5px;
+      height: 9px;
+      border: 2px solid var(--bg);
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .decision-item label { cursor: pointer; }
+
+    .decision-note {
+      font-size: 0.75rem;
+      color: rgba(255,201,71,0.6);
+      font-style: italic;
+    }
+
+    /* ─────────────────────────────────────────
+       Tech stack footer table
+    ───────────────────────────────────────── */
+    .stack-section {
+      margin-top: 56px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+
+    .stack-heading {
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--fg3);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stack-heading::before {
+      content: "";
+      width: 20px;
+      height: 1px;
+      background: var(--fg3);
+    }
+
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .stack-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 14px 16px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .stack-layer {
+      font-size: 0.68rem;
+      color: var(--fg3);
+      letter-spacing: 0.06em;
+    }
+
+    .stack-tech {
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--teal);
+    }
+
+    /* ─────────────────────────────────────────
+       Footer
+    ───────────────────────────────────────── */
+    .page-footer {
+      margin-top: 64px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .footer-brand {
+      font-family: "Unbounded", sans-serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: 0.15em;
+    }
+
+    .footer-note {
+      font-size: 0.72rem;
+      color: var(--fg3);
+    }
+
+    /* ─────────────────────────────────────────
+       Print overrides
+    ───────────────────────────────────────── */
+    @media print {
+      body {
+        background: #ffffff;
+        color: #111111;
+      }
+
+      body::before, body::after { display: none; }
+
+      .page { padding: 32px; }
+
+      :root {
+        --bg:    #ffffff;
+        --bg2:   #f5f5f5;
+        --fg:    #111111;
+        --fg2:   #333333;
+        --fg3:   #666666;
+        --border: rgba(0,0,0,0.1);
+        --teal-dim: rgba(0,180,160,0.08);
+        --coral-dim: rgba(220,80,80,0.08);
+      }
+
+      .phase-card {
+        box-shadow: none;
+        border-color: rgba(0,0,0,0.15);
+        break-inside: avoid;
+      }
+
+      .phase { break-inside: avoid; }
+
+      .timeline::before { display: none; }
+
+      .badge--now {
+        color: #008070;
+        border-color: #008070;
+        background: rgba(0,180,160,0.06);
+      }
+
+      .badge--next {
+        color: #cc3333;
+        border-color: #cc3333;
+        background: rgba(220,80,80,0.06);
+      }
+
+      .page-footer, .stack-section { break-before: avoid; }
+    }
+
+    /* ─────────────────────────────────────────
+       Responsive
+    ───────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .page { padding: 40px 16px 80px; }
+
+      .timeline { gap: 24px; }
+      .timeline::before { left: 18px; }
+
+      .phase { gap: 18px; }
+      .phase-node { width: 36px; }
+
+      .phase-card { padding: 20px; }
+
+      .feature-list { grid-template-columns: 1fr; }
+
+      .pricing-table { font-size: 0.75rem; }
+      .pricing-table th, .pricing-table td { padding: 10px 12px; }
+
+      .stack-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <header class="page-header">
+    <div class="header-line"></div>
+
+    <div class="header-eyebrow">
+      Internal Doc — Confidential
+    </div>
+
+    <h1 class="page-title">
+      <span class="accent">QuizGen</span><br>
+      Product Roadmap
+    </h1>
+
+    <p class="page-subtitle">2026 Launch Plan</p>
+
+    <div class="header-meta">
+      <span class="meta-item">
+        <span class="meta-dot"></span>
+        最終更新: 2026-05-31
+      </span>
+      <span class="meta-item">
+        <span class="meta-dot" style="background:var(--coral)"></span>
+        Phase 4 構成
+      </span>
+      <span class="meta-item">
+        <span class="meta-dot" style="background:var(--amber)"></span>
+        要決定事項 3件
+      </span>
+    </div>
+  </header>
+
+  <!-- ── TIMELINE ── -->
+  <div class="timeline">
+
+    <!-- PHASE 0 — NOW -->
+    <div class="phase phase--now">
+      <div class="phase-node">
+        <div class="phase-dot"></div>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-header">
+          <div class="phase-title-group">
+            <div class="phase-label">Phase 0</div>
+            <div class="phase-title">LP 公開・検証</div>
+          </div>
+          <span class="badge badge--now">Now</span>
+        </div>
+
+        <div class="phase-goal">
+          <div class="goal-label">目標</div>
+          ウェイトリスト 100人 + ICP 仮説の定性検証
+        </div>
+
+        <p class="section-heading">タスク</p>
+        <ul class="task-list">
+          <li class="task-item">
+            <input type="checkbox" id="t0-1">
+            <label for="t0-1">LP を Vercel に再デプロイ（LP のみ公開・アプリは非公開）</label>
+          </li>
+          <li class="task-item">
+            <input type="checkbox" id="t0-2">
+            <label for="t0-2">LP 修正: CTA を <code style="font-size:0.8em;color:var(--teal);background:var(--teal-dim);padding:1px 5px;border-radius:3px">#waitlist</code> スクロールに変更</label>
+          </li>
+          <li class="task-item">
+            <input type="checkbox" id="t0-3">
+            <label for="t0-3">LP 修正: 活用事例セクション追加（架空ペルソナ・数字なし）</label>
+          </li>
+          <li class="task-item">
+            <input type="checkbox" id="t0-4">
+            <label for="t0-4">X アカウント開設（ハンドル未定）</label>
+          </li>
+          <li class="task-item">
+            <input type="checkbox" id="t0-5">
+            <label for="t0-5">VTuber / X インフルエンサー 10〜15名に DM（1日3件以内）</label>
+          </li>
+          <li class="task-item">
+            <input type="checkbox" id="t0-6">
+            <label for="t0-6">ウェイトリスト 100人達成</label>
+          </li>
+        </ul>
+
+        <div class="kpi-row">
+          <span class="kpi-label">KPI</span>
+          <span class="kpi-chip kpi-chip--teal">waitlist 登録数</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 1 — NEXT -->
+    <div class="phase phase--next">
+      <div class="phase-node">
+        <div class="phase-dot"></div>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-header">
+          <div class="phase-title-group">
+            <div class="phase-label">Phase 1</div>
+            <div class="phase-title">アプリ公開</div>
+          </div>
+          <span class="badge badge--next">Next</span>
+        </div>
+
+        <div class="phase-goal">
+          <div class="goal-label">トリガー</div>
+          waitlist 100人達成後 — K-factor 計測・バイラルループ確認
+        </div>
+
+        <p class="section-heading">実装済み機能</p>
+        <ul class="feature-list">
+          <li class="feature-item">
+            <span class="feature-check">✓</span>
+            AI クイズ生成（Groq API）
+          </li>
+          <li class="feature-item">
+            <span class="feature-check">✓</span>
+            短縮 URL シェア（<code style="font-size:0.8em">/q/:id</code>）
+          </li>
+          <li class="feature-item">
+            <span class="feature-check">✓</span>
+            スコアアニメーション（confetti / emoji）
+          </li>
+          <li class="feature-item">
+            <span class="feature-check">✓</span>
+            Web Share API（3段階フォールバック）
+          </li>
+          <li class="feature-item">
+            <span class="feature-check">✓</span>
+            カスタム結果メッセージ（スコア帯別）
+          </li>
+          <li class="feature-item">
+            <span class="feature-check">✓</span>
+            日英バイリンガル
+          </li>
+          <li class="feature-item">
+            <span class="feature-check">✓</span>
+            QR コード
+          </li>
+        </ul>
+
+        <div class="kpi-row">
+          <span class="kpi-label">KPI</span>
+          <span class="kpi-chip kpi-chip--coral">K-factor</span>
+          <span style="font-size:0.75rem;color:var(--fg3)">月間シェアクリック数 / quiz_completed</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 2 — FUTURE -->
+    <div class="phase phase--future">
+      <div class="phase-node">
+        <div class="phase-dot"></div>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-header">
+          <div class="phase-title-group">
+            <div class="phase-label">Phase 2</div>
+            <div class="phase-title">Creator プラン実装</div>
+          </div>
+          <span class="badge badge--future">Future</span>
+        </div>
+
+        <div class="phase-goal">
+          <div class="goal-label">トリガー</div>
+          K-factor &gt; 1 確認後 — 月間売上 ¥50,000 達成
+        </div>
+
+        <p class="section-heading">プラン構造</p>
+        <table class="pricing-table">
+          <thead>
+            <tr>
+              <th>プラン</th>
+              <th>価格</th>
+              <th>保存件数</th>
+              <th>TTL</th>
+              <th>設問数</th>
+              <th>ランキング</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="plan-name">Free</span></td>
+              <td class="price-highlight">¥0</td>
+              <td>1件</td>
+              <td>30日</td>
+              <td>5問</td>
+              <td>なし</td>
+            </tr>
+            <tr>
+              <td><span class="plan-name" style="color:var(--teal)">Creator</span></td>
+              <td class="price-highlight">¥980 <span style="font-size:0.75em;color:var(--fg3)">/月</span></td>
+              <td>5件</td>
+              <td>永続</td>
+              <td>10問</td>
+              <td>上位3位</td>
+            </tr>
+            <tr>
+              <td><span class="plan-name" style="color:var(--coral)">Pro</span></td>
+              <td class="price-highlight">¥2,480 <span style="font-size:0.75em;color:var(--fg3)">/月</span></td>
+              <td>無制限</td>
+              <td>永続</td>
+              <td>20問</td>
+              <td>全員</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="section-heading">実装が必要な機能</p>
+        <ul class="bullet-list">
+          <li class="bullet-item">ユーザー認証（アカウント登録）</li>
+          <li class="bullet-item">Stripe 決済</li>
+          <li class="bullet-item">回答者ダッシュボード（誰が何問正解したか）</li>
+          <li class="bullet-item">クイズ保存件数・TTL 管理</li>
+          <li class="bullet-item">設問数制限（プラン別）</li>
+          <li class="bullet-item">ランキング表示（上位3位 / 全員）</li>
+        </ul>
+
+        <div class="kpi-row">
+          <span class="kpi-label">KPI</span>
+          <span class="kpi-chip kpi-chip--amber">有料クリエイター数</span>
+          <span class="kpi-chip kpi-chip--amber">MRR</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 3 — FUTURE (scale) -->
+    <div class="phase phase--scale">
+      <div class="phase-node">
+        <div class="phase-dot"></div>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-header">
+          <div class="phase-title-group">
+            <div class="phase-label">Phase 3</div>
+            <div class="phase-title">スケール</div>
+          </div>
+          <span class="badge badge--future">Future</span>
+        </div>
+
+        <div class="phase-goal">
+          <div class="goal-label">トリガー</div>
+          有料クリエイター 5人達成後
+        </div>
+
+        <ul class="bullet-list">
+          <li class="bullet-item">Pro プラン強化</li>
+          <li class="bullet-item">動的 OGP（スコア入り og:image）</li>
+          <li class="bullet-item">カスタム URL（<code style="font-size:0.8em;color:var(--teal);background:var(--teal-dim);padding:1px 5px;border-radius:3px">/q/[name]</code>）</li>
+          <li class="bullet-item">グローバル展開（英語圏 SNS 強化）</li>
+          <li class="bullet-item">詳細アナリティクス</li>
+        </ul>
+      </div>
+    </div>
+
+  </div><!-- /timeline -->
+
+  <!-- ── DECISIONS REQUIRED ── -->
+  <div class="decision-block">
+    <div class="decision-header">
+      <div class="decision-icon">⚡</div>
+      <div>
+        <div class="decision-title">Decision Required</div>
+        <div class="decision-subtitle">創業者確認待ち事項</div>
+      </div>
+    </div>
+
+    <ul class="decision-list">
+      <li class="decision-item">
+        <input type="checkbox" id="d1">
+        <label for="d1">プロダクト名（仮称 QuizGen）</label>
+      </li>
+      <li class="decision-item">
+        <input type="checkbox" id="d2">
+        <label for="d2">X アカウントハンドル</label>
+      </li>
+      <li class="decision-item">
+        <input type="checkbox" id="d3">
+        <label for="d3">
+          Creator プランの価格（仮: ¥980 / ¥2,480）
+          <span class="decision-note"> ← 創業者確認中</span>
+        </label>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ── TECH STACK ── -->
+  <div class="stack-section">
+    <div class="stack-heading">技術スタック</div>
+
+    <div class="stack-grid">
+      <div class="stack-item">
+        <span class="stack-layer">ホスティング</span>
+        <span class="stack-tech">Vercel Hobby</span>
+      </div>
+      <div class="stack-item">
+        <span class="stack-layer">LLM</span>
+        <span class="stack-tech">Groq Llama 3.3 70B</span>
+      </div>
+      <div class="stack-item">
+        <span class="stack-layer">KV / DB</span>
+        <span class="stack-tech">Upstash Redis</span>
+      </div>
+      <div class="stack-item">
+        <span class="stack-layer">フロントエンド</span>
+        <span class="stack-tech">静的 HTML/CSS/JS</span>
+      </div>
+      <div class="stack-item">
+        <span class="stack-layer">決済（予定）</span>
+        <span class="stack-tech">Stripe</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer class="page-footer">
+    <span class="footer-brand">QUIZGEN</span>
+    <span class="footer-note">Internal use only — Do not distribute</span>
+  </footer>
+
+</div><!-- /page -->
+
+</body>
+</html>

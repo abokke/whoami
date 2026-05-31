@@ -4,6 +4,8 @@ const LANG_KEY = "quizgen.lang.v1";
 let currentQuiz = null;
 let currentLang = localStorage.getItem(LANG_KEY) ?? "en";
 let lastAnswers = null;
+let createStarted = false;
+let answerStarted = false;
 
 // ---- i18n ----
 
@@ -86,6 +88,7 @@ const i18n = {
     copyFailedFeedback: "Copy manually",
     generateAi: "Generate with AI",
     generateAiLoading: "Generating…",
+    createFromResult: "Make your own quiz",
     statusMessages: {
       sharedLoaded: "Shared quiz loaded.",
       sharedLoadError: "Could not load the shared quiz link.",
@@ -190,6 +193,7 @@ const i18n = {
     copyFailedFeedback: "手動でコピーしてください",
     generateAi: "AIで生成",
     generateAiLoading: "生成中…",
+    createFromResult: "あなたもクイズを作る",
     statusMessages: {
       sharedLoaded: "共有されたクイズを読み込みました。",
       sharedLoadError: "共有リンクのクイズを読み込めませんでした。",
@@ -560,10 +564,12 @@ Person memo:
 ${profile.trim()}`;
 }
 
-// ---- Analytics (noop until backend wires up real tracking) ----
+// ---- Analytics ----
 
-function trackEvent(name, props = {}) {
-  // intentionally empty — replace with real analytics integration
+function trackEvent(name, params = {}) {
+  if (typeof gtag === "function") {
+    gtag("event", name, params);
+  }
 }
 
 // ---- AI generation ----
@@ -670,6 +676,7 @@ async function buildShareUrl(quiz) {
     });
     if (res.ok) {
       const { id } = await res.json();
+      trackEvent("quiz_published", { method: "short_url" });
       return `${location.origin}/q/${id}`;
     }
   } catch { /* fall through to hash fallback */ }
@@ -680,10 +687,12 @@ async function buildShareUrl(quiz) {
   if (window.CompressionStream && window.DecompressionStream) {
     try {
       const b64 = await compress(json);
+      trackEvent("quiz_published", { method: "hash" });
       return `${base}#q2=${b64}`;
     } catch { /* fall through */ }
   }
   const b64 = btoa(unescape(encodeURIComponent(json)));
+  trackEvent("quiz_published", { method: "hash" });
   return `${base}#q=${b64}`;
 }
 
@@ -923,6 +932,7 @@ function renderQuizEditor(quiz) {
 
 function renderQuiz(quiz) {
   currentQuiz = quiz;
+  answerStarted = false;
   updateBuilderStepAvailability(Boolean(quiz));
   renderQuizReveal(quiz);
   renderQuizEditor(quiz);
@@ -1014,6 +1024,11 @@ function renderQuiz(quiz) {
   });
 
   questionStack.onchange = () => {
+    // event 5: answer_started — fires once on the first choice selection
+    if (!answerStarted) {
+      answerStarted = true;
+      trackEvent("answer_started");
+    }
     syncQuestionCards();
     updateAnswerProgress();
   };
@@ -1075,10 +1090,12 @@ function renderResult(answers) {
     : `${score}/${total}問正解。`;
   resultMessage.textContent = `${scoreLabel} ${result.message}`;
 
-  // P1-2: analytics — quiz_completed with score/total
+  // event 6: answer_completed — results displayed after all questions answered
+  const ratio = total === 0 ? 0 : Math.round((score / total) * 100);
+  trackEvent("answer_completed", { score, total, ratio });
+  // legacy GA4 event kept for continuity
   if (typeof gtag === "function") {
-    // [MEDIUM-4] 0-division guard consistent with other functions
-    gtag("event", "quiz_completed", { score: score, total: total, ratio: total === 0 ? 0 : Math.round((score / total) * 100) });
+    gtag("event", "quiz_completed", { score, total, ratio });
   }
   quizMeta.textContent = currentLang === "en"
     ? `${score}/${total} correct`
@@ -1414,6 +1431,14 @@ async function handleAiButtonClick(provider) {
 
 document.querySelectorAll("[data-ai-provider]").forEach((btn) => {
   btn.addEventListener("click", () => handleAiButtonClick(btn.dataset.aiProvider));
+});
+
+// event 1: create_start — fires once when the user first types in the profile field
+profileInput.addEventListener("input", () => {
+  if (!createStarted && profileInput.value.trim().length > 0) {
+    createStarted = true;
+    trackEvent("create_start");
+  }
 });
 
 langToggle.addEventListener("click", () => {

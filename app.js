@@ -100,7 +100,9 @@ const i18n = {
       exportMissing: "There is no quiz JSON to export.",
       exportDone: "Quiz JSON exported.",
       quizCleared: "Quiz cleared.",
-      generateAiError: "Generation failed. Try again."
+      generateAiError: "Generation failed. Try again.",
+      generateAiRateLimit: "Daily AI limit reached. Use \"Make Prompt\" to generate with ChatGPT or Claude instead.",
+      generateAiUnavailable: "AI generation is temporarily unavailable. Use \"Make Prompt\" to generate manually."
     },
     resultMessages: {
       perfect: { title: "Perfect! 👀", message: "Are you a stalker?!" },
@@ -202,7 +204,9 @@ const i18n = {
       exportMissing: "書き出す設問JSONがありません。",
       exportDone: "設問JSONを書き出しました。",
       quizCleared: "クイズを消去しました。",
-      generateAiError: "生成に失敗しました。もう一度試してください。"
+      generateAiError: "生成に失敗しました。もう一度試してください。",
+      generateAiRateLimit: "本日のAI生成上限に達しました。「プロンプト作成」からChatGPT・Claudeで生成できます。",
+      generateAiUnavailable: "AI生成サービスが一時的に利用できません。「プロンプト作成」から手動で生成できます。"
     },
     resultMessages: {
       perfect: { title: "完璧！ 👀 ストーカー？", message: "全問正解です。本人の口ぐせや行動パターンまでかなり把握しています。" },
@@ -564,6 +568,16 @@ function trackEvent(name, props = {}) {
 
 // ---- AI generation ----
 
+function showRateLimitFallback() {
+  setStatus(statusText("generateAiRateLimit"), true);
+  // Pulse the Make Prompt button so the user notices the fallback path
+  const makePromptBtn = document.querySelector("#makePromptButton");
+  if (makePromptBtn) {
+    makePromptBtn.classList.add("btn-pulse");
+    setTimeout(() => makePromptBtn.classList.remove("btn-pulse"), 3000);
+  }
+}
+
 async function handleGenerateAi() {
   const profile = profileInput.value.trim();
   if (!profile) {
@@ -583,7 +597,13 @@ async function handleGenerateAi() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ profile }),
     });
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    if (!res.ok) {
+      if (res.status === 429) {
+        showRateLimitFallback();
+        return;
+      }
+      throw new Error(`API error: ${res.status}`);
+    }
     const { quiz } = await res.json();
     const normalized = normalizeQuiz(quiz);
     saveQuiz(normalized);
@@ -591,8 +611,12 @@ async function handleGenerateAi() {
     renderQuiz(normalized);
     setTab("quiz");
     trackEvent("quiz_generated", { method: "api" });
-  } catch {
-    setStatus(statusText("generateAiError"), true);
+  } catch (err) {
+    if (err.message?.includes("502") || err.message?.includes("504")) {
+      setStatus(statusText("generateAiUnavailable"), true);
+    } else {
+      setStatus(statusText("generateAiError"), true);
+    }
   } finally {
     btn.disabled = false;
     btn.textContent = i18n[currentLang].generateAi;

@@ -1,6 +1,8 @@
 export const ALLOWED_ORIGINS = new Set([
-  "https://quizgen.vercel.app",
+  "https://whoknowsme.app",
+  "https://quizgen-chi.vercel.app",
   "http://localhost:3000",
+  "http://localhost:3333",
 ]);
 
 export function checkCors(req, res) {

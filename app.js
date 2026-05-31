@@ -1591,6 +1591,7 @@ document.querySelector("#downloadQuizButton").addEventListener("click", () => {
 async function copyShareLink() {
   if (!currentQuiz) return;
   const url = await buildShareUrl(currentQuiz);
+  trackEvent("share_clicked");
   try {
     await navigator.clipboard.writeText(url);
     setStatus(i18n[currentLang].copiedShare);
@@ -1752,6 +1753,22 @@ if (shareResultBtn) {
     }
   });
 }
+
+// event 7: create_from_result_clicked — handled via event delegation so it works
+// even if the button is injected into resultPanel after this script runs
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#createFromResultButton")) {
+    trackEvent("create_from_result_clicked");
+    window.location.href = "/";
+  }
+});
+
+// event 8: creator_waitlist_submitted — Tally embed fires a postMessage on submission
+window.addEventListener("message", (e) => {
+  if (e.data?.type === "tally-form-submission") {
+    trackEvent("creator_waitlist_submitted");
+  }
+});
 
 // ---- Init ----
 

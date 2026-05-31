@@ -66,6 +66,13 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "internal_error" });
   }
 
+  // fire-and-forget: シェアリンク作成をサーバー側で確実に記録する
+  kv.pipeline()
+    .incr(`stats:shares:${id}`)
+    .expire(`stats:shares:${id}`, TTL_SECONDS)
+    .exec()
+    .catch(() => {});
+
   return res.status(200).json({
     id,
     url: `/q/${id}`,

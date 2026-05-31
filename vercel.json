@@ -2,9 +2,11 @@
   "functions": {
     "api/generate.js": { "maxDuration": 30 },
     "api/shorten.js":  { "maxDuration": 10 },
-    "api/quiz.js":     { "maxDuration": 10 }
+    "api/quiz.js":     { "maxDuration": 10 },
+    "api/record.js":   { "maxDuration": 10 }
   },
   "rewrites": [
+    { "source": "/", "destination": "/lp.html" },
     { "source": "/q/:id", "destination": "/api/quiz?id=:id" }
   ]
 }

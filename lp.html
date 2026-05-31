@@ -809,6 +809,114 @@
       .scores-grid { grid-template-columns: 1fr 1fr; }
       .score-card:nth-child(5) { grid-column: 1 / -1; }
     }
+
+    /* ─── USE CASES ─── */
+    .usecases-section {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+    }
+
+    .usecases-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-top: 64px;
+    }
+
+    .usecase-card {
+      padding: 36px 32px 28px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      transition: border-color 0.25s ease, background 0.25s ease;
+    }
+
+    .usecase-card:hover {
+      border-color: var(--teal);
+      background: var(--bg3);
+    }
+
+    .usecase-card-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .usecase-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--teal-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .usecase-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 2px;
+      background: var(--teal-dim);
+      color: var(--teal);
+      font-family: "Space Mono", monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .usecase-name {
+      font-family: "Unbounded", sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    .usecase-usage {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .usecase-quote {
+      font-family: "Instrument Serif", "Noto Sans JP", serif;
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--fg);
+      line-height: 1.6;
+      padding-left: 14px;
+      border-left: 2px solid var(--teal);
+      margin-bottom: 20px;
+      flex: 1;
+    }
+
+    .usecase-disclaimer {
+      font-family: "Space Mono", monospace;
+      font-size: 0.6rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.04em;
+      opacity: 0.6;
+    }
+
+    @media (max-width: 900px) {
+      .usecases-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+      .usecase-card {
+        border-left: none;
+        border-right: none;
+      }
+      .usecase-card + .usecase-card {
+        border-top: none;
+      }
+    }
   </style>
 </head>
 <body>
@@ -818,7 +926,7 @@
     <a href="index.html" class="nav-logo">QUIZGEN</a>
     <div style="display:flex;align-items:center;gap:12px;">
       <button class="lang-toggle" type="button" id="lpLangToggle" style="padding:6px 14px;border:1px solid var(--teal);border-radius:4px;background:transparent;color:var(--teal);font-family:'Unbounded',sans-serif;font-weight:700;font-size:0.68rem;letter-spacing:0.06em;cursor:pointer;transition:background 0.2s,color 0.2s;" onmouseover="this.style.background='var(--teal)';this.style.color='var(--bg)'" onmouseout="this.style.background='transparent';this.style.color='var(--teal)'">EN</button>
-      <a href="index.html" class="nav-cta" data-i18n-lp="navCta">クイズを作る →</a>
+      <a href="#waitlist" class="nav-cta" data-i18n-lp="navCta">早期アクセスを登録する →</a>
     </div>
   </nav>
 
@@ -1009,6 +1117,55 @@
     </div>
   </section>
 
+  <!-- USE CASES -->
+  <section class="section usecases-section" id="usecases">
+    <div class="section-inner">
+      <div class="section-label reveal">Use cases</div>
+      <h2 class="section-title reveal" style="transition-delay:0.1s" data-i18n-lp="useCasesTitle">
+        こんな人が使っています（想定）
+      </h2>
+      <div class="usecases-grid">
+
+        <!-- カード1: VTuber -->
+        <div class="usecase-card reveal" style="transition-delay:0.1s">
+          <div class="usecase-card-top">
+            <div class="usecase-icon">🎮</div>
+            <span class="usecase-tag">個人勢 VTuber</span>
+          </div>
+          <div class="usecase-name">星宮こよみ</div>
+          <p class="usecase-usage">3周年記念に『こよみ検定』を作ってファンに送った</p>
+          <blockquote class="usecase-quote">「コメント欄が全部クイズの感想で埋まって笑った」</blockquote>
+          <span class="usecase-disclaimer" data-i18n-lp="useCasesNote">※ イメージです（実際のユーザーとは異なります）</span>
+        </div>
+
+        <!-- カード2: X インフルエンサー -->
+        <div class="usecase-card reveal" style="transition-delay:0.2s">
+          <div class="usecase-card-top">
+            <div class="usecase-icon">✍️</div>
+            <span class="usecase-tag">X クリエイター</span>
+          </div>
+          <div class="usecase-name">橘サクラ</div>
+          <p class="usecase-usage">フォロワー感謝企画でクイズをポストした</p>
+          <blockquote class="usecase-quote">「リプ欄が盛り上がって普段より反応が全然違った」</blockquote>
+          <span class="usecase-disclaimer" data-i18n-lp="useCasesNote">※ イメージです（実際のユーザーとは異なります）</span>
+        </div>
+
+        <!-- カード3: YouTuber -->
+        <div class="usecase-card reveal" style="transition-delay:0.3s">
+          <div class="usecase-card-top">
+            <div class="usecase-icon">🎬</div>
+            <span class="usecase-tag">YouTuber</span>
+          </div>
+          <div class="usecase-name">山田はると</div>
+          <p class="usecase-usage">動画の概要欄にクイズURLを毎回載せている</p>
+          <blockquote class="usecase-quote">「視聴者がどれくらい自分を知ってるか気になってた」</blockquote>
+          <span class="usecase-disclaimer" data-i18n-lp="useCasesNote">※ イメージです（実際のユーザーとは異なります）</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- SCORE SHOWCASE -->
   <section class="section scores-section" id="scores">
     <div class="section-inner">
@@ -1113,6 +1270,8 @@
         heroCta: "Bet you can't beat 80% — 今すぐ試す<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"M3 8h10M9 4l4 4-4 4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
         heroHowTo: "使い方を見る",
         featureCta: "今すぐ試す →",
+        useCasesTitle: "こんな人が使っています（想定）",
+        useCasesNote: "※ イメージです（実際のユーザーとは異なります）",
         ctaButton: "クイズを作る<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"M3 8h10M9 4l4 4-4 4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
         ctaNote: "No sign-up required",
       },
@@ -1126,6 +1285,8 @@
         heroCta: "Try it now<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"M3 8h10M9 4l4 4-4 4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
         heroHowTo: "See how it works",
         featureCta: "Try it now →",
+        useCasesTitle: "How creators use it",
+        useCasesNote: "* Fictional personas for illustration purposes.",
         ctaButton: "Create a quiz<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\"><path d=\"M3 8h10M9 4l4 4-4 4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>",
         ctaNote: "No sign-up required",
       },

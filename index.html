@@ -194,6 +194,7 @@
           <aside class="score-panel">
             <p class="eyebrow" data-i18n="challengeEyebrow">Challenge</p>
             <h2 id="quizTitle">—</h2>
+            <p id="participantCount" class="participant-count" hidden></p>
             <div class="score-meter" aria-hidden="true">
               <span id="scoreMeterFill"></span>
             </div>
@@ -227,6 +228,10 @@
               <h2 id="resultTitle"></h2>
               <p id="resultMessage"></p>
               <div class="result-detail" id="resultDetail"></div>
+              <div id="rankingDisplay" class="ranking-display" hidden>
+                <span id="rankingTime"></span>
+                <span id="rankingRank"></span>
+              </div>
               <div class="action-row">
                 <button class="primary-button" type="button" id="retryButton" data-i18n="retryButton">Try Again</button>
                 <button class="primary-button share-result-btn" type="button" id="shareResultButton" data-i18n="shareResult">Share result</button>

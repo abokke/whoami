@@ -53,6 +53,8 @@ export default async function handler(req, res) {
     return res.status(404).json({ error: "not_found" });
   }
 
+  const member = `${anonId}:${Date.now()}`;
+
   try {
     const pipeline = kv.pipeline();
     pipeline.incr(`stats:answers:${id}`);
@@ -62,7 +64,7 @@ export default async function handler(req, res) {
     pipeline.zadd(`stats:times:${id}`, {
       nx: true,
       score: timeMs,
-      member: `${anonId}:${Date.now()}`,
+      member,
     });
     pipeline.expire(`stats:times:${id}`, TTL_SECONDS);
     await pipeline.exec();
@@ -70,5 +72,26 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "internal_error" });
   }
 
-  return res.status(200).json({ ok: true });
+  let rank, total, scoreTotal;
+  try {
+    [[, rank], [, total], [, scoreTotal]] = await kv.pipeline()
+      .zrank(`stats:times:${id}`, member)
+      .zcard(`stats:times:${id}`)
+      .get(`stats:answers:${id}`)
+      .exec();
+  } catch {
+    return res.status(500).json({ error: "internal_error" });
+  }
+
+  const safeRank = rank ?? 0;
+  const safeTotal = Math.max(Number(total ?? 1), 1);
+  const percentile = Math.round((1 - safeRank / safeTotal) * 100);
+
+  return res.status(200).json({
+    ok: true,
+    rank: safeRank + 1,
+    total: safeTotal,
+    percentile,
+    answerCount: Number(scoreTotal ?? 0),
+  });
 }

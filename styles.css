@@ -1377,3 +1377,21 @@ button:disabled {
 .btn-pulse {
   animation: btnPulse 0.8s ease-in-out 3;
 }
+
+.participant-count {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+.ranking-display {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  padding: 12px 0;
+  font-family: "Space Mono", monospace;
+  font-size: 0.85rem;
+  color: var(--accent);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 8px;
+}

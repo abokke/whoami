@@ -6,6 +6,8 @@ let currentLang = localStorage.getItem(LANG_KEY) ?? "en";
 let lastAnswers = null;
 let createStarted = false;
 let answerStarted = false;
+let quizStartTime = null;
+let currentQuizId = null;
 
 // ---- i18n ----
 
@@ -69,6 +71,7 @@ const i18n = {
     qrHeading: "Scan to play",
     qrHint: "Point your phone camera at this code",
     challengeEyebrow: "Challenge",
+    participantCount: "{count} people answered",
     resultEyebrow: "Result",
     yourAnswer: "Your answer",
     correctAnswer: "Correct answer",
@@ -174,6 +177,7 @@ const i18n = {
     qrHeading: "スキャンして遊ぶ",
     qrHint: "スマホのカメラをかざしてください",
     challengeEyebrow: "チャレンジ",
+    participantCount: "{count}人が回答済み",
     resultEyebrow: "結果",
     yourAnswer: "あなたの回答",
     correctAnswer: "正解",
@@ -696,7 +700,39 @@ async function buildShareUrl(quiz) {
   return `${base}#q=${b64}`;
 }
 
+function hideBuilderTab() {
+  const builderTab = document.querySelector('[data-tab="builder"]');
+  if (builderTab) builderTab.hidden = true;
+  document.querySelector(".tablist").classList.add("single-tab");
+  const helpBanner = document.querySelector("#helpBanner");
+  if (helpBanner) helpBanner.hidden = true;
+}
+
 async function loadFromHash() {
+  // Short URL: /q/:id — fetch quiz and answerCount from API
+  const shortMatch = location.pathname.match(/^\/q\/([A-Za-z0-9_-]{1,20})$/);
+  if (shortMatch) {
+    try {
+      const id = shortMatch[1];
+      const res = await fetch(`/api/quiz?id=${encodeURIComponent(id)}`);
+      if (!res.ok) throw new Error(`quiz fetch failed: ${res.status}`);
+      const { quiz: rawQuiz, answerCount } = await res.json();
+      const quiz = normalizeQuiz(rawQuiz);
+      currentQuizId = id;
+      saveQuiz(quiz);
+      jsonInput.value = JSON.stringify(quiz, null, 2);
+      renderQuiz(quiz);
+      renderParticipantCount(answerCount);
+      setTab("quiz");
+      hideBuilderTab();
+      setStatus(statusText("sharedLoaded"));
+      return true;
+    } catch {
+      setStatus(statusText("sharedLoadError"), true);
+      return false;
+    }
+  }
+
   const hash = location.hash;
   try {
     let json;
@@ -713,11 +749,7 @@ async function loadFromHash() {
     jsonInput.value = JSON.stringify(quiz, null, 2);
     renderQuiz(quiz);
     setTab("quiz");
-    const builderTab = document.querySelector('[data-tab="builder"]');
-    builderTab.hidden = true;
-    document.querySelector(".tablist").classList.add("single-tab");
-    const helpBanner = document.querySelector("#helpBanner");
-    if (helpBanner) helpBanner.hidden = true;
+    hideBuilderTab();
     setStatus(statusText("sharedLoaded"));
     return true;
   } catch {
@@ -933,6 +965,7 @@ function renderQuizEditor(quiz) {
 function renderQuiz(quiz) {
   currentQuiz = quiz;
   answerStarted = false;
+  quizStartTime = null;
   updateBuilderStepAvailability(Boolean(quiz));
   renderQuizReveal(quiz);
   renderQuizEditor(quiz);
@@ -1027,11 +1060,65 @@ function renderQuiz(quiz) {
     // event 5: answer_started — fires once on the first choice selection
     if (!answerStarted) {
       answerStarted = true;
+      quizStartTime = Date.now();
       trackEvent("answer_started");
     }
     syncQuestionCards();
     updateAnswerProgress();
   };
+}
+
+// ---- Participant count display ----
+
+function renderParticipantCount(count) {
+  const el = document.getElementById("participantCount");
+  if (!el) return;
+  if (!count || count <= 0) {
+    el.hidden = true;
+    return;
+  }
+  const template = i18n[currentLang].participantCount ?? "{count} people answered";
+  el.textContent = template.replace("{count}", String(count));
+  el.hidden = false;
+}
+
+// ---- Anonymous ID ----
+
+function getAnonId() {
+  const key = "quizgen.anonId.v1";
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
+// ---- Ranking display ----
+
+async function recordAndShowRanking(quizId, score, total, timeMs, anonId) {
+  const display = document.querySelector("#rankingDisplay");
+  if (!display) return;
+
+  try {
+    const res = await fetch("/api/record", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: quizId, score, total, timeMs, anonId }),
+    });
+    if (!res.ok) return;
+    const { rank, percentile, total: totalAnswers } = await res.json();
+
+    const timeEl = document.querySelector("#rankingTime");
+    const rankEl = document.querySelector("#rankingRank");
+    const timeSec = Math.round(timeMs / 1000);
+
+    if (timeEl) timeEl.textContent = `⏱️ ${timeSec}秒`;
+    if (rankEl && rank && totalAnswers) {
+      rankEl.textContent = `🏆 ${rank}位/${totalAnswers}人中（上位${percentile}%）`;
+    }
+    display.hidden = false;
+  } catch { /* 失敗しても結果表示に影響させない */ }
 }
 
 // ---- Result ----
@@ -1073,10 +1160,18 @@ function getResultTone(score, total) {
 
 function renderResult(answers) {
   if (!currentQuiz) return;
+
+  const timeMs = quizStartTime ? Date.now() - quizStartTime : null;
+  const timeSec = timeMs ? Math.round(timeMs / 1000) : null; // eslint-disable-line no-unused-vars
+
   const total = currentQuiz.questions.length;
   const score = answers.reduce((sum, answer, index) => {
     return sum + (answer === currentQuiz.questions[index].answerIndex ? 1 : 0);
   }, 0);
+
+  // Reset ranking display before potentially populating it
+  const rankingDisplay = document.querySelector("#rankingDisplay");
+  if (rankingDisplay) rankingDisplay.hidden = true;
 
   const result = getResultMessage(score, total);
   const tone = getResultTone(score, total);
@@ -1141,6 +1236,11 @@ function renderResult(answers) {
     row.append(badge, answerBody);
     resultDetail.append(row);
   });
+
+  // Fire-and-display: record answer and show ranking if quizId and timeMs are available
+  if (currentQuizId && timeMs !== null) {
+    recordAndShowRanking(currentQuizId, score, total, timeMs, getAnonId());
+  }
 }
 
 function showResult(event) {

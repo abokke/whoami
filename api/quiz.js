@@ -22,9 +22,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "missing_field" });
   }
 
-  let quizRaw;
+  let quizRaw, answerCountRaw;
   try {
-    quizRaw = await kv.get(`quiz:${id}`);
+    [[, quizRaw], [, answerCountRaw]] = await kv.pipeline()
+      .get(`quiz:${id}`)
+      .get(`stats:answers:${id}`)
+      .exec();
   } catch {
     return res.status(500).json({ error: "internal_error" });
   }
@@ -41,5 +44,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "internal_error" });
   }
 
-  return res.status(200).json({ quiz });
+  const answerCount = Number(answerCountRaw ?? 0);
+
+  return res.status(200).json({ quiz, answerCount });
 }
